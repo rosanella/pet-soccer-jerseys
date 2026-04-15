@@ -20,12 +20,15 @@ const pool = new Pool({
 // Email transporter
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
-  port: process.env.SMTP_PORT,
-  secure: true, // true for 465, false for other ports
+  port: parseInt(process.env.SMTP_PORT || '465'),
+  secure: process.env.SMTP_PORT === '465', // true for 465, false for 587
   auth: {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS,
   },
+  tls: {
+    rejectUnauthorized: false // Helps with handshake issues on some hostings
+  }
 });
 
 // Create table if not exists
@@ -59,7 +62,7 @@ app.post('/api/orders', async (req, res) => {
   const { customerName, address, email, phone, productName, petName, petNumber, key, price } = req.body;
 
   try {
-    // 1. Save to Database
+    // 1. Save to Database (We wait for this)
     const result = await pool.query(
       'INSERT INTO orders (customer_name, address, email, phone, product_name, pet_name, pet_number, size_key, total) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id',
       [customerName, address, email, phone, productName, petName, petNumber, key, price]
@@ -67,7 +70,7 @@ app.post('/api/orders', async (req, res) => {
     
     const orderId = result.rows[0].id;
 
-    // 2. Send email to sales@4puppies.cl
+    // 2. Send email (We DON'T wait for this to finish to avoid blocking PayPal)
     const mailOptions = {
       from: `"4Puppies Shop" <${process.env.SMTP_USER}>`,
       to: 'sales@4puppies.cl',
@@ -87,12 +90,14 @@ app.post('/api/orders', async (req, res) => {
       `,
     };
 
-    await transporter.sendMail(mailOptions);
+    // Send email in background
+    transporter.sendMail(mailOptions).catch(err => console.error('Email background error:', err));
 
+    // Respond immediately so user goes to PayPal
     res.json({ success: true, orderId });
   } catch (error) {
     console.error('Order error:', error);
-    res.status(500).json({ success: false, error: 'Database or Email error' });
+    res.status(500).json({ success: false, error: 'Database error' });
   }
 });
 
