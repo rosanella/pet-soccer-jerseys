@@ -83,9 +83,20 @@ const SizeGuideModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => v
             </tbody>
           </table>
         </div>
-        <div className="mt-8 flex gap-3 p-4 bg-yellow-50 rounded-2xl border border-yellow-100">
+        <h3 className="text-xs font-bold uppercase text-blue-600 tracking-widest mb-4 mt-2">✨ Custom length options</h3>
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          <div className="p-4 bg-blue-50 rounded-2xl border border-blue-100 text-center">
+            <p className="text-[10px] font-black uppercase text-blue-400 mb-1">+2" Extra Back</p>
+            <p className="text-[10px] text-blue-800 font-bold leading-tight">For extra coverage on longer pets.</p>
+          </div>
+          <div className="p-4 bg-blue-50 rounded-2xl border border-blue-100 text-center">
+            <p className="text-[10px] font-black uppercase text-blue-400 mb-1">+4" Extra Back</p>
+            <p className="text-[10px] text-blue-800 font-bold leading-tight">Max length for breeds like Corgis or Dachshunds.</p>
+          </div>
+        </div>
+        <div className="flex gap-3 p-4 bg-yellow-50 rounded-2xl border border-yellow-100">
           <Info size={20} className="text-yellow-600 flex-shrink-0" />
-          <p className="text-[10px] text-yellow-800 font-bold uppercase italic leading-tight">If between sizes, choose the larger one. Each jersey is handmade in 8 business days once ordered.</p>
+          <p className="text-[10px] text-yellow-800 font-bold uppercase italic leading-tight">If between sizes, choose the larger one. You can select the extra length in the "Size & Length" dropdown on each product. Handmade in 8 business days once ordered.</p>
         </div>
       </div>
     </div>
