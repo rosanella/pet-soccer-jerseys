@@ -125,20 +125,16 @@ const CheckoutModal = ({ isOpen, onClose, product, orderDetails }: { isOpen: boo
       if (!response.ok) throw new Error('Failed to save order');
       
       // After saving, redirect to PayPal
-      const businessEmail = "vikingos82@hotmail.com"; // Your personal PayPal
-      const itemName = `CUSTOM ${product.name} [Size: ${orderDetails.key}] [Pet: ${orderDetails.petName}] [#:${orderDetails.petNumber}]`;
+      const businessEmail = "vikingos82@hotmail.com"; 
+      const itemName = `${product.name} (Pet: ${orderDetails.petName})`;
       const params = new URLSearchParams({
         cmd: "_xclick",
         business: businessEmail,
         item_name: itemName,
         amount: orderDetails.price.toString(),
         currency_code: "USD",
-        lc: "US",
         no_shipping: "2",
-        email: formData.email,
-        first_name: formData.customerName.split(' ')[0],
-        last_name: formData.customerName.split(' ').slice(1).join(' '),
-        custom: JSON.stringify({ phone: formData.phone })
+        return: window.location.origin
       });
 
       window.location.href = `https://www.paypal.com/cgi-bin/webscr?${params.toString()}`;
