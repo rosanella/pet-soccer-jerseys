@@ -47,8 +47,7 @@ const Header = () => (
     </div>
     <div className="max-w-7xl mx-auto px-4 md:px-6 py-4 flex justify-between items-center">
       <div className="flex items-center gap-2">
-        <PawPrint className="text-blue-600" size={28} />
-        <h1 className="text-xl md:text-2xl font-black tracking-tighter uppercase">4PUPPIES<span className="text-blue-600">.CL</span></h1>
+        <img src="/images/logo_4puppies.png" alt="4PUPPIES.CL" className="h-10 md:h-12 w-auto object-contain" />
       </div>
       <div className="flex items-center gap-4">
         <Camera size={20} className="text-gray-400 hover:text-pink-600 cursor-pointer transition-colors" />
@@ -339,7 +338,7 @@ export default function App() {
       </section>
       <footer className="py-20 bg-slate-50 text-center space-y-12">
         <div className="flex flex-col items-center gap-4">
-          <div className="flex items-center gap-2"><PawPrint className="text-blue-600" size={32} /><span className="text-2xl font-black tracking-tighter uppercase">4PUPPIES<span className="text-blue-600">.CL</span></span></div>
+          <img src="/images/logo_4puppies.png" alt="4PUPPIES.CL" className="h-12 md:h-16 w-auto object-contain" />
           <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em]">Premium Pet Apparel</p>
         </div>
         <div className="flex flex-wrap justify-center gap-10 font-black text-[10px] uppercase tracking-widest text-slate-400">
