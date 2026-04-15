@@ -125,7 +125,7 @@ const CheckoutModal = ({ isOpen, onClose, product, orderDetails }: { isOpen: boo
       if (!response.ok) throw new Error('Failed to save order');
       
       // After saving, redirect to PayPal
-      const businessEmail = "vikingos82@hotmail.com"; 
+      const businessEmail = "rosanella.galindo@gmail.com"; 
       const itemName = `${product.name} (Pet: ${orderDetails.petName})`;
       const params = new URLSearchParams({
         cmd: "_xclick",
