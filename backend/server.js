@@ -62,8 +62,8 @@ app.post('/api/orders', async (req, res) => {
 
     // 2. Send email via Resend (Background)
     const emailData = {
-      from: '4Puppies Shop <onboarding@resend.dev>',
-      to: 'rosanella.galindo@gmail.com', // Enviar temporalmente aquí para asegurar entrega
+      from: '4Puppies Shop <sales@4puppies.cl>',
+      to: 'sales@4puppies.cl',
       subject: `New Order Attempt #${orderId} - ${productName}`,
       html: `
         <h2>New Order Detail</h2>
