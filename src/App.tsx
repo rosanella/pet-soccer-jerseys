@@ -29,7 +29,7 @@ const SIZES = ["XS", "S", "M", "L", "XL", "2XL", "3XL", "4XL", "5XL"];
 
 const PRODUCTS = [
   { id: 1, name: "USA 2026 Edition", description: "Home jersey for American pups.", images: ["/images/usa_front.jpg", "/images/usa_back.jpg"] },
-  { id: 2, name: "Mexico 2026 Jersey", description: "Vibrant host nation jersey.", images: ["/images/mexico_pet_jersey.jpg", "/images/mexico_pet_jersey.jpg"] },
+  { id: 2, name: "Mexico 2026 Jersey", description: "Vibrant host nation jersey.", images: ["/images/mexico_front.jpg", "/images/mexico_back.jpg"] },
   { id: 3, name: "Canada 2026 Jersey", description: "Northern host team style.", images: ["/images/canada_pet_jersey.jpg", "/images/canada_pet_jersey.jpg"] },
   { id: 4, name: "Argentina Champion", description: "The iconic albiceleste stripes.", images: ["/images/argentina_pet_jersey.jpg", "/images/argentina_pet_jersey.jpg"] },
   { id: 5, name: "Brazil Canary", description: "The most legendary soccer yellow.", images: ["/images/brazil_pet_jersey.jpg", "/images/brazil_pet_jersey.jpg"] },
@@ -50,8 +50,15 @@ const Header = () => (
         <img src="/images/logo_4puppies.png" alt="4PUPPIES.CL" className="h-10 md:h-12 w-auto object-contain" />
       </div>
       <div className="flex items-center gap-4">
-        <Camera size={20} className="text-gray-400 hover:text-pink-600 cursor-pointer transition-colors" />
-        <button className="bg-blue-600 text-white px-5 py-2 rounded-full text-xs font-black uppercase tracking-widest shadow-lg shadow-blue-200">Shop Collection</button>
+        <a href="https://instagram.com/4puppies.cl" target="_blank" rel="noopener noreferrer">
+          <Camera size={20} className="text-gray-400 hover:text-pink-600 cursor-pointer transition-colors" />
+        </a>
+        <button 
+          onClick={() => document.getElementById('products')?.scrollIntoView({ behavior: 'smooth' })}
+          className="bg-blue-600 text-white px-5 py-2 rounded-full text-xs font-black uppercase tracking-widest shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all active:scale-95"
+        >
+          Shop Collection
+        </button>
       </div>
     </div>
   </header>
@@ -309,8 +316,13 @@ export default function App() {
               Handmade in Chile • FedEx Express to USA (4-5 days) • Premium Athletic Mesh • 8-Day Prep Time.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start pt-4">
-              <a href="#products" className="bg-blue-600 text-white px-12 py-5 rounded-2xl font-black text-lg shadow-2xl shadow-blue-200 uppercase tracking-tighter">Shop Collection</a>
-              <button onClick={() => setSizeModalOpen(true)} className="bg-white border-2 border-gray-100 text-gray-800 px-10 py-5 rounded-2xl font-black text-lg shadow-sm uppercase tracking-tighter">Size Guide</button>
+              <button 
+                onClick={() => document.getElementById('products')?.scrollIntoView({ behavior: 'smooth' })}
+                className="bg-blue-600 text-white px-12 py-5 rounded-2xl font-black text-lg shadow-2xl shadow-blue-200 uppercase tracking-tighter hover:bg-blue-700 transition-all active:scale-95"
+              >
+                Shop Collection
+              </button>
+              <button onClick={() => setSizeModalOpen(true)} className="bg-white border-2 border-gray-100 text-gray-800 px-10 py-5 rounded-2xl font-black text-lg shadow-sm uppercase tracking-tighter hover:bg-slate-50 transition-all active:scale-95">Size Guide</button>
             </div>
           </div>
           <div className="relative">
