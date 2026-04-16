@@ -33,7 +33,7 @@ const PRODUCTS = [
   { id: 3, name: "Canada 2026 Jersey", description: "Northern host team style.", images: ["/images/canada_pet_jersey.jpg", "/images/canada_pet_jersey.jpg"] },
   { id: 4, name: "Argentina Champion", description: "The iconic albiceleste stripes.", images: ["/images/argentina_pet_jersey.jpg", "/images/argentina_pet_jersey.jpg"] },
   { id: 5, name: "Brazil Canary", description: "The most legendary soccer yellow.", images: ["/images/brazil_pet_jersey.jpg", "/images/brazil_pet_jersey.jpg"] },
-  { id: 6, name: "France Tricolore", description: "European style and precision.", images: ["/images/france_pet_jersey.jpg", "/images/france_pet_jersey.jpg"] },
+  { id: 6, name: "Colombia El Tricolor", description: "The vibrant yellow of South American sun.", images: ["/images/colombia_front.jpg", "/images/colombia_back.jpg"] },
   { id: 7, name: "England Lionheart", description: "Support the Three Lions.", images: ["/images/england_pet_jersey.jpg", "/images/england_pet_jersey.jpg"] },
   { id: 8, name: "Italy Azzurri", description: "Timeless Mediterranean blue.", images: ["/images/italy_pet_jersey.jpg", "/images/italy_pet_jersey.jpg"] },
 ];
