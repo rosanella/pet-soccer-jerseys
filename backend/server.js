@@ -62,8 +62,8 @@ app.post('/api/orders', async (req, res) => {
 
     // 2. Send email via Resend (Background)
     const emailData = {
-      from: '4Puppies Shop <onboarding@resend.dev>', // We use the default sender for now
-      to: 'sales@4puppies.cl',
+      from: '4Puppies Shop <onboarding@resend.dev>',
+      to: 'rosanella.galindo@gmail.com', // Enviar temporalmente aquí para asegurar entrega
       subject: `New Order Attempt #${orderId} - ${productName}`,
       html: `
         <h2>New Order Detail</h2>
@@ -80,7 +80,10 @@ app.post('/api/orders', async (req, res) => {
       `,
     };
 
-    resend.emails.send(emailData).catch(err => console.error('Resend error:', err));
+    console.log(`Attempting to send email for Order #${orderId} via Resend...`);
+    resend.emails.send(emailData)
+      .then(res => console.log('Resend success:', res))
+      .catch(err => console.error('Resend error:', err));
 
     // Respond immediately so user goes to PayPal
     res.json({ success: true, orderId });
@@ -93,21 +96,21 @@ app.post('/api/orders', async (req, res) => {
 // PayPal Webhook (IPN)
 app.post('/api/paypal-webhook', async (req, res) => {
   const params = req.body;
-  const orderId = params.custom;
+  const orderId = params.custom || params.invoice; // Probar ambos
   const paymentStatus = params.payment_status;
 
+  console.log('Full Webhook Body:', JSON.stringify(params));
   console.log(`Webhook received for Order #${orderId}. Status: ${paymentStatus}`);
 
-  if (paymentStatus === 'Completed') {
+  if (paymentStatus === 'Completed' && orderId) {
     try {
-      await pool.query('UPDATE orders SET status = $1 WHERE id = $2', ['completed', orderId]);
+      await pool.query('UPDATE orders SET status = $1 WHERE id = $2', ['completed', parseInt(orderId)]);
       console.log(`Order #${orderId} marked as completed in DB!`);
     } catch (err) {
       console.error('Webhook DB update error:', err);
     }
   }
   
-  // Always respond 200 to PayPal
   res.sendStatus(200);
 });
 
