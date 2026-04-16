@@ -46,8 +46,9 @@ const Header = () => (
       <span className="hidden md:flex items-center gap-1">🇨🇱 Shipped from Chile</span>
     </div>
     <div className="max-w-7xl mx-auto px-4 md:px-6 py-4 flex justify-between items-center">
-      <div className="flex items-center gap-2">
-        <img src="/images/logo_4puppies.png" alt="4PUPPIES.CL" className="h-10 md:h-12 w-auto object-contain" />
+      <div className="flex items-center gap-3">
+        <img src="/images/logo_4puppies.png" alt="4PUPPIES.CL" className="h-12 md:h-16 w-auto object-contain" />
+        <span className="text-xl md:text-2xl font-black tracking-tighter text-slate-900 uppercase leading-none">4PUPPIES.CL</span>
       </div>
       <div className="flex items-center gap-4">
         <a href="https://instagram.com/4puppies.cl" target="_blank" rel="noopener noreferrer">
@@ -362,7 +363,8 @@ export default function App() {
       </section>
       <footer className="py-20 bg-slate-50 text-center space-y-12">
         <div className="flex flex-col items-center gap-4">
-          <img src="/images/logo_4puppies.png" alt="4PUPPIES.CL" className="h-12 md:h-16 w-auto object-contain" />
+          <img src="/images/logo_4puppies.png" alt="4PUPPIES.CL" className="h-16 md:h-24 w-auto object-contain" />
+          <h3 className="text-3xl md:text-4xl font-black tracking-tighter text-slate-900 uppercase leading-none">4PUPPIES.CL</h3>
           <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em]">Premium Pet Apparel</p>
         </div>
         <div className="flex flex-wrap justify-center gap-10 font-black text-[10px] uppercase tracking-widest text-slate-400">
