@@ -132,7 +132,7 @@ const CheckoutModal = ({ isOpen, onClose, product, orderDetails }: { isOpen: boo
         body: JSON.stringify(fullOrder)
       });
       
-      if (!response.ok) throw new Error('Failed to save order');
+      const { orderId } = await response.json();
       
       // After saving, redirect to PayPal
       const businessEmail = "rosanella.galindo@gmail.com"; 
@@ -144,6 +144,8 @@ const CheckoutModal = ({ isOpen, onClose, product, orderDetails }: { isOpen: boo
         amount: orderDetails.price.toString(),
         currency_code: "USD",
         no_shipping: "2",
+        custom: orderId.toString(), // Send order ID to PayPal
+        notify_url: "https://globalshop.4puppies.cl/api/paypal-webhook", // Your webhook URL
         return: window.location.origin
       });
 

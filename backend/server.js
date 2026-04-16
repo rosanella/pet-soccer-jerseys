@@ -8,6 +8,7 @@ require('dotenv').config();
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // Database connection
 const pool = new Pool({
@@ -87,6 +88,27 @@ app.post('/api/orders', async (req, res) => {
     console.error('Order error:', error);
     res.status(500).json({ success: false, error: 'Database error' });
   }
+});
+
+// PayPal Webhook (IPN)
+app.post('/api/paypal-webhook', async (req, res) => {
+  const params = req.body;
+  const orderId = params.custom;
+  const paymentStatus = params.payment_status;
+
+  console.log(`Webhook received for Order #${orderId}. Status: ${paymentStatus}`);
+
+  if (paymentStatus === 'Completed') {
+    try {
+      await pool.query('UPDATE orders SET status = $1 WHERE id = $2', ['completed', orderId]);
+      console.log(`Order #${orderId} marked as completed in DB!`);
+    } catch (err) {
+      console.error('Webhook DB update error:', err);
+    }
+  }
+  
+  // Always respond 200 to PayPal
+  res.sendStatus(200);
 });
 
 // Serve static frontend if in production
