@@ -1,8 +1,8 @@
 const express = require('express');
 const cors = require('cors');
 const { Pool } = require('pg');
-const nodemailer = require('nodemailer');
 const path = require('path');
+const { Resend } = require('resend');
 require('dotenv').config();
 
 const app = express();
@@ -17,20 +17,8 @@ const pool = new Pool({
   }
 });
 
-// Email transporter
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: parseInt(process.env.SMTP_PORT || '587'),
-  secure: process.env.SMTP_PORT === '465', // false for 587
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-  tls: {
-    rejectUnauthorized: false,
-    minVersion: 'TLSv1.2'
-  }
-});
+// Email engine (Resend)
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 // Create table if not exists
 const initDb = async () => {
@@ -71,9 +59,9 @@ app.post('/api/orders', async (req, res) => {
     
     const orderId = result.rows[0].id;
 
-    // 2. Send email (We DON'T wait for this to finish to avoid blocking PayPal)
-    const mailOptions = {
-      from: `"4Puppies Shop" <${process.env.SMTP_USER}>`,
+    // 2. Send email via Resend (Background)
+    const emailData = {
+      from: '4Puppies Shop <onboarding@resend.dev>', // We use the default sender for now
       to: 'sales@4puppies.cl',
       subject: `New Order Attempt #${orderId} - ${productName}`,
       html: `
@@ -91,8 +79,7 @@ app.post('/api/orders', async (req, res) => {
       `,
     };
 
-    // Send email in background
-    transporter.sendMail(mailOptions).catch(err => console.error('Email background error:', err));
+    resend.emails.send(emailData).catch(err => console.error('Resend error:', err));
 
     // Respond immediately so user goes to PayPal
     res.json({ success: true, orderId });
