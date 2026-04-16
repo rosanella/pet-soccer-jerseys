@@ -326,8 +326,18 @@ export default function App() {
             </div>
           </div>
           <div className="relative">
-            <div className="relative aspect-square rounded-[4rem] overflow-hidden border-[12px] border-white shadow-2xl rotate-1">
-              <img src="/images/hero_corgi_usa.jpg" alt="Hero Pet" className="w-full h-full object-cover" />
+            <div className="relative aspect-square rounded-[4rem] overflow-hidden border-[12px] border-white shadow-2xl rotate-1 bg-slate-100">
+              <video 
+                autoPlay 
+                muted 
+                loop 
+                playsInline 
+                poster="/images/hero_corgi_usa.jpg"
+                className="w-full h-full object-cover"
+              >
+                <source src="/images/Dog_model.mp4" type="video/mp4" />
+                Your browser does not support the video tag.
+              </video>
             </div>
           </div>
         </div>
