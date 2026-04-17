@@ -371,6 +371,44 @@ const ReviewModal = ({ isOpen, onClose, onRefresh }: { isOpen: boolean, onClose:
   );
 };
 
+const AllReviewsModal = ({ isOpen, onClose, reviews }: { isOpen: boolean, onClose: () => void, reviews: any[] }) => {
+  if (!isOpen) return null;
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-md" onClick={onClose}></div>
+      <div className="relative bg-white w-full max-w-5xl max-h-[90vh] rounded-[3rem] shadow-2xl overflow-hidden flex flex-col">
+        <div className="p-8 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 z-10">
+          <div>
+            <h3 className="text-2xl font-black uppercase tracking-tighter italic">Papis <span className="text-blue-600">Perrunos</span></h3>
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Lo que dicen de nosotros</p>
+          </div>
+          <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-full transition-all text-slate-400 hover:text-slate-900">
+            <X size={24} />
+          </button>
+        </div>
+        <div className="flex-grow overflow-y-auto p-8 bg-slate-50/50">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {reviews.map((rev, i) => (
+              <div key={i} className="bg-white p-4 rounded-[2rem] shadow-sm border border-gray-100 space-y-4 hover:scale-105 transition-all duration-300">
+                <div className="aspect-square rounded-2xl overflow-hidden bg-slate-100">
+                  <img src={rev.pet_image_url || "/images/hero_corgi_usa.jpg"} className="w-full h-full object-cover" alt="Happy pet" />
+                </div>
+                <div className="flex text-yellow-400 gap-0.5">
+                  {[...Array(rev.stars)].map((_, j) => <Star key={j} size={10} fill="currentColor" />)}
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold text-slate-900 leading-tight italic">"{rev.comment}"</p>
+                  <p className="text-[8px] font-black uppercase text-gray-400 tracking-widest pt-1">— {rev.customer_name}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const AdminReviews = ({ onBack }: { onBack: () => void }) => {
   const [reviews, setReviews] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -446,6 +484,7 @@ export default function App() {
   const [sizeModalOpen, setSizeModalOpen] = useState(false);
   const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
+  const [allReviewsOpen, setAllReviewsOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [orderDetails, setOrderDetails] = useState<any>(null);
   const [reviews, setReviews] = useState<any[]>([]);
@@ -582,14 +621,14 @@ export default function App() {
               <div 
                 key={i} 
                 onClick={() => setActiveReviewId(activeReviewId === rev.id ? null : rev.id)}
-                className={`flex-shrink-0 w-[55%] md:w-64 bg-slate-50 p-5 rounded-[2.5rem] shadow-sm border border-gray-100 space-y-4 snap-start text-left transition-all duration-500 cursor-pointer ${
-                  activeReviewId === rev.id ? 'scale-110 z-20 shadow-2xl bg-white border-blue-100 !mx-4' : 'opacity-80 md:opacity-100'
+                className={`flex-shrink-0 w-[55%] md:w-64 bg-slate-50 p-5 rounded-[2.5rem] shadow-sm border border-gray-100 space-y-4 snap-start text-left transition-all duration-500 cursor-pointer group ${
+                  activeReviewId === rev.id ? 'scale-110 z-20 shadow-2xl bg-white border-blue-100 !mx-4' : 'opacity-80 md:opacity-100 hover:scale-105 hover:opacity-100 hover:bg-white hover:border-blue-50'
                 }`}
               >
                 <div className="aspect-square rounded-2xl overflow-hidden bg-slate-200">
                   <img 
                     src={rev.pet_image_url || "/images/hero_corgi_usa.jpg"} 
-                    className={`w-full h-full object-cover transition-all duration-700 ${
+                    className={`w-full h-full object-cover transition-all duration-700 group-hover:grayscale-0 group-hover:scale-110 ${
                       activeReviewId === rev.id ? 'grayscale-0 scale-100' : 'grayscale'
                     }`} 
                     alt="Happy pet" 
@@ -599,7 +638,7 @@ export default function App() {
                   {[...Array(rev.stars)].map((_, j) => <Star key={j} size={12} fill="currentColor" />)}
                 </div>
                 <div className="space-y-1">
-                  <p className={`text-[11px] font-bold text-gray-500 leading-tight italic transition-all ${
+                  <p className={`text-[11px] font-bold text-gray-500 leading-tight italic transition-all group-hover:text-slate-900 ${
                     activeReviewId === rev.id ? 'text-slate-900 line-clamp-none' : 'line-clamp-2'
                   }`}>
                     "{rev.comment}"
@@ -616,8 +655,8 @@ export default function App() {
             <button onClick={() => setReviewModalOpen(true)} className="bg-blue-600 text-white px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-lg shadow-blue-100">
               Write a Review
             </button>
-            <button onClick={() => alert("Tag us @4puppies.cl on Instagram to be featured here!")} className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-blue-600 hover:text-blue-700 transition-all">
-              See all reviews <ChevronRight size={14} />
+            <button onClick={() => setAllReviewsOpen(true)} className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-blue-600 hover:text-blue-700 transition-all">
+              Mira lo que dicen otros papis perrunos 🐾 <ChevronRight size={14} />
             </button>
           </div>
         </div>
@@ -644,6 +683,7 @@ export default function App() {
       <SizeGuideModal isOpen={sizeModalOpen} onClose={() => setSizeModalOpen(false)} />
       {selectedProduct && <CheckoutModal isOpen={checkoutModalOpen} onClose={() => setCheckoutModalOpen(false)} product={selectedProduct} orderDetails={orderDetails} />}
       <ReviewModal isOpen={reviewModalOpen} onClose={() => setReviewModalOpen(false)} onRefresh={fetchReviews} />
+      <AllReviewsModal isOpen={allReviewsOpen} onClose={() => setAllReviewsOpen(false)} reviews={reviews} />
     </div>
   );
 }
