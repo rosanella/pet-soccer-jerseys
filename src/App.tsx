@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Truck, 
   Clock, 
@@ -11,7 +11,9 @@ import {
   PawPrint,
   X,
   Camera,
-  MessageSquare
+  MessageSquare,
+  Star,
+  Upload
 } from 'lucide-react';
 
 const PRICING_TABLE: Record<string, number> = {
@@ -290,11 +292,106 @@ const ProductCard = ({ product, onOpenSizeChart, onStartCheckout }: { product: a
   );
 };
 
+const ReviewModal = ({ isOpen, onClose, onRefresh }: { isOpen: boolean, onClose: () => void, onRefresh: () => void }) => {
+  const [formData, setFormData] = useState({ customerName: '', comment: '', stars: 5 });
+  const [image, setImage] = useState<File | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  if (!isOpen) return null;
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    const data = new FormData();
+    data.append('customerName', formData.customerName);
+    data.append('comment', formData.comment);
+    data.append('stars', formData.stars.toString());
+    if (image) data.append('image', image);
+
+    try {
+      await fetch('/api/reviews', { method: 'POST', body: data });
+      alert("Review submitted! It will appear once approved by our team.");
+      onRefresh();
+      onClose();
+    } catch (error) {
+      alert("Error submitting review. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+      <div className="bg-white rounded-[2.5rem] max-w-lg w-full overflow-hidden shadow-2xl relative p-8 md:p-10">
+        <button onClick={onClose} className="absolute top-6 right-6 p-2 hover:bg-gray-100 rounded-full transition-colors"><X size={24} /></button>
+        <div className="flex items-center gap-3 mb-6">
+          <div className="p-3 bg-blue-100 rounded-2xl text-blue-600"><Star size={24} /></div>
+          <div>
+            <h2 className="text-2xl font-black uppercase tracking-tight leading-none">Share your Experience</h2>
+            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">Upload a photo of your pet!</p>
+          </div>
+        </div>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Your Name</label>
+              <input required type="text" className="w-full bg-slate-50 border-2 border-transparent p-3 rounded-xl text-sm font-bold outline-none" 
+                value={formData.customerName} onChange={e => setFormData({...formData, customerName: e.target.value})} />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Rating</label>
+              <select className="w-full bg-slate-50 border-2 border-transparent p-3 rounded-xl text-sm font-bold outline-none"
+                value={formData.stars} onChange={e => setFormData({...formData, stars: parseInt(e.target.value)})}>
+                {[5,4,3,2,1].map(n => <option key={n} value={n}>{n} Stars</option>)}
+              </select>
+            </div>
+          </div>
+          <div className="space-y-1">
+            <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Your Comment</label>
+            <textarea required className="w-full bg-slate-50 border-2 border-transparent p-3 rounded-xl text-sm font-bold outline-none h-24" 
+              value={formData.comment} onChange={e => setFormData({...formData, comment: e.target.value})} />
+          </div>
+          <div className="space-y-2">
+            <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Pet Photo</label>
+            <div className="relative">
+              <input type="file" accept="image/*" onChange={e => setImage(e.target.files?.[0] || null)} className="hidden" id="pet-upload" />
+              <label htmlFor="pet-upload" className="w-full border-2 border-dashed border-gray-200 p-6 rounded-2xl flex flex-col items-center gap-2 cursor-pointer hover:bg-slate-50 transition-all">
+                <Upload size={24} className="text-blue-600" />
+                <span className="text-xs font-bold text-gray-500">{image ? image.name : "Select Pet Photo"}</span>
+              </label>
+            </div>
+          </div>
+          <button disabled={isSubmitting} type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-2xl uppercase tracking-widest text-sm transition-all shadow-xl shadow-blue-100">
+            {isSubmitting ? 'Uploading...' : 'Submit Review'}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+};
+
 export default function App() {
   const [sizeModalOpen, setSizeModalOpen] = useState(false);
   const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
+  const [reviewModalOpen, setReviewModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [orderDetails, setOrderDetails] = useState<any>(null);
+  const [reviews, setReviews] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetchReviews();
+  }, []);
+
+  const fetchReviews = async () => {
+    try {
+      const resp = await fetch('/api/reviews');
+      const data = await resp.json();
+      setReviews(data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   const startCheckout = (product: any, details: any) => {
     setSelectedProduct(product);
@@ -395,27 +492,26 @@ export default function App() {
           </div>
           
           <div className="flex gap-4 overflow-x-auto pb-10 snap-x no-scrollbar -mx-4 px-4">
-            {[
-              { name: "Sarah & Max", text: "Amazing quality! Max looks like a pro. USA jersey fits perfectly.", pet: "/images/hero_corgi_usa.jpg" },
-              { name: "David & Leo", text: "The custom prep took exactly 8 days. Very happy with the result!", pet: "/images/argentina_pet_jersey.jpg" },
-              { name: "Elena & Bella", text: "Best purchase ever for my pug. Shipping to Miami was super fast.", pet: "/images/colombia_front.jpg" },
-              { name: "Mark & Rocky", text: "Five stars for the athletic mesh. Very breathable for summer.", pet: "/images/mexico_front.jpg" },
-              { name: "Sofia & Toby", text: "The detail on the names is impressive. Quality is 10/10.", pet: "/images/brazil_pet_jersey.jpg" }
-            ].map((rev, i) => (
+            {reviews.length > 0 ? reviews.map((rev, i) => (
               <div key={i} className="flex-shrink-0 w-[45%] md:w-64 bg-slate-50 p-4 rounded-[2.5rem] shadow-sm border border-gray-100 space-y-3 snap-start text-left">
                 <div className="aspect-square rounded-2xl overflow-hidden bg-slate-200">
-                  <img src={rev.pet} className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-500" alt="Happy pet" />
+                  <img src={rev.pet_image_url || "/images/hero_corgi_usa.jpg"} className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-500" alt="Happy pet" />
                 </div>
                 <div className="flex text-yellow-400 gap-0.5">
-                  {[...Array(5)].map((_, j) => <span key={j} className="text-[12px]">★</span>)}
+                  {[...Array(rev.stars)].map((_, j) => <Star key={j} size={10} fill="currentColor" />)}
                 </div>
-                <p className="text-[10px] font-bold text-gray-500 leading-tight italic">"{rev.text}"</p>
-                <p className="text-[9px] font-black uppercase text-slate-900 tracking-widest pt-1">— {rev.name}</p>
+                <p className="text-[10px] font-bold text-gray-500 leading-tight italic">"{rev.comment}"</p>
+                <p className="text-[9px] font-black uppercase text-slate-900 tracking-widest pt-1">— {rev.customer_name}</p>
               </div>
-            ))}
+            )) : (
+              <p className="text-center w-full text-slate-400 font-bold italic py-10">Be the first to review!</p>
+            )}
           </div>
           
-          <div className="text-center">
+          <div className="text-center flex flex-col items-center gap-4">
+            <button onClick={() => setReviewModalOpen(true)} className="bg-blue-600 text-white px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-lg shadow-blue-100">
+              Write a Review
+            </button>
             <button onClick={() => alert("Tag us @4puppies.cl on Instagram to be featured here!")} className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-blue-600 hover:text-blue-700 transition-all">
               See all reviews <ChevronRight size={14} />
             </button>
@@ -443,6 +539,7 @@ export default function App() {
       </footer>
       <SizeGuideModal isOpen={sizeModalOpen} onClose={() => setSizeModalOpen(false)} />
       {selectedProduct && <CheckoutModal isOpen={checkoutModalOpen} onClose={() => setCheckoutModalOpen(false)} product={selectedProduct} orderDetails={orderDetails} />}
+      <ReviewModal isOpen={reviewModalOpen} onClose={() => setReviewModalOpen(false)} onRefresh={fetchReviews} />
     </div>
   );
 }
