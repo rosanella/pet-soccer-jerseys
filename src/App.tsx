@@ -371,6 +371,77 @@ const ReviewModal = ({ isOpen, onClose, onRefresh }: { isOpen: boolean, onClose:
   );
 };
 
+const AdminReviews = ({ onBack }: { onBack: () => void }) => {
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchAllReviews = async () => {
+    try {
+      const resp = await fetch('/api/reviews/all'); // Need to add this endpoint
+      const data = await resp.json();
+      setReviews(data);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAllReviews();
+  }, []);
+
+  const approveReview = async (id: number) => {
+    await fetch(`/api/reviews/${id}/approve`, { method: 'POST' });
+    fetchAllReviews();
+  };
+
+  const deleteReview = async (id: number) => {
+    if (confirm("Delete this review?")) {
+      await fetch(`/api/reviews/${id}`, { method: 'DELETE' });
+      fetchAllReviews();
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-50 p-6">
+      <div className="max-w-4xl mx-auto space-y-8">
+        <div className="flex justify-between items-center">
+          <h1 className="text-3xl font-black uppercase tracking-tighter italic">Review <span className="text-blue-600">Moderation</span></h1>
+          <button onClick={onBack} className="text-xs font-black uppercase tracking-widest text-gray-400 hover:text-slate-900 transition-all">Back to Site</button>
+        </div>
+        
+        {loading ? <p className="text-center font-bold text-gray-400 py-20">Loading pending reviews...</p> : (
+          <div className="grid gap-4">
+            {reviews.length === 0 && <p className="text-center text-gray-400 font-bold py-10">No reviews to manage.</p>}
+            {reviews.map((rev) => (
+              <div key={rev.id} className="bg-white p-6 rounded-[2rem] shadow-sm border border-gray-100 flex flex-col md:flex-row gap-6 items-center">
+                <div className="w-24 h-24 rounded-2xl overflow-hidden bg-slate-100 flex-shrink-0">
+                  <img src={rev.pet_image_url} alt="Pet" className="w-full h-full object-cover" />
+                </div>
+                <div className="flex-grow space-y-1 text-center md:text-left">
+                  <div className="flex justify-center md:justify-start text-yellow-400 mb-1">
+                    {[...Array(rev.stars)].map((_, i) => <Star key={i} size={12} fill="currentColor" />)}
+                  </div>
+                  <h4 className="font-black text-slate-900 uppercase tracking-tight">{rev.customer_name}</h4>
+                  <p className="text-sm text-gray-500 italic">"{rev.comment}"</p>
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-2">Status: <span className={rev.status === 'approved' ? 'text-green-500' : 'text-orange-500'}>{rev.status}</span></p>
+                </div>
+                <div className="flex gap-2">
+                  {rev.status !== 'approved' && (
+                    <button onClick={() => approveReview(rev.id)} className="bg-green-500 text-white px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-green-600 transition-all">Approve</button>
+                  )}
+                  <button onClick={() => deleteReview(rev.id)} className="bg-red-50 text-red-500 px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-100 transition-all text-red-100">Delete</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 export default function App() {
   const [sizeModalOpen, setSizeModalOpen] = useState(false);
   const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
@@ -378,10 +449,20 @@ export default function App() {
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [orderDetails, setOrderDetails] = useState<any>(null);
   const [reviews, setReviews] = useState<any[]>([]);
+  const [isAdmin, setIsAdmin] = useState(window.location.pathname === '/admin-reviews');
 
   useEffect(() => {
     fetchReviews();
+    // Handle URL changes
+    const handlePopState = () => setIsAdmin(window.location.pathname === '/admin-reviews');
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
   }, []);
+
+  const navigateTo = (path: string) => {
+    window.history.pushState({}, '', path);
+    setIsAdmin(path === '/admin-reviews');
+  };
 
   const fetchReviews = async () => {
     try {
@@ -398,6 +479,10 @@ export default function App() {
     setOrderDetails(details);
     setCheckoutModalOpen(true);
   };
+
+  if (isAdmin) {
+    return <AdminReviews onBack={() => navigateTo('/')} />;
+  }
 
   return (
     <div className="min-h-screen bg-[#F9FAFB] font-sans selection:bg-blue-600 selection:text-white">

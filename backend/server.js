@@ -162,6 +162,16 @@ app.post('/api/reviews', upload.single('image'), async (req, res) => {
   }
 });
 
+app.get('/api/reviews/all', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM reviews ORDER BY created_at DESC');
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Fetch all reviews error:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch reviews' });
+  }
+});
+
 app.get('/api/reviews', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM reviews WHERE status = $1 ORDER BY created_at DESC', ['approved']);
