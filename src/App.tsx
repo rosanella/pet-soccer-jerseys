@@ -379,8 +379,8 @@ const AllReviewsModal = ({ isOpen, onClose, reviews }: { isOpen: boolean, onClos
       <div className="relative bg-white w-full max-w-5xl max-h-[90vh] rounded-[3rem] shadow-2xl overflow-hidden flex flex-col">
         <div className="p-8 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 z-10">
           <div>
-            <h3 className="text-2xl font-black uppercase tracking-tighter italic">Papis <span className="text-blue-600">Perrunos</span></h3>
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Lo que dicen de nosotros</p>
+            <h3 className="text-2xl font-black uppercase tracking-tighter italic">Pup <span className="text-blue-600">Parents</span></h3>
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">What they're saying about us</p>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-full transition-all text-slate-400 hover:text-slate-900">
             <X size={24} />
@@ -656,7 +656,7 @@ export default function App() {
               Write a Review
             </button>
             <button onClick={() => setAllReviewsOpen(true)} className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-blue-600 hover:text-blue-700 transition-all">
-              Mira lo que dicen otros papis perrunos 🐾 <ChevronRight size={14} />
+              See what other pup parents are saying 🐾 <ChevronRight size={14} />
             </button>
           </div>
         </div>
