@@ -1,5 +1,5 @@
-const express = require('express');
-const cors = require('cors');
+const cloudinary = require('cloudinary').v2;
+const multer = require('multer');
 const { Pool } = require('pg');
 const path = require('path');
 const { Resend } = require('resend');
@@ -9,6 +9,16 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Cloudinary configuration
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME || 'diugehwky',
+  api_key: process.env.CLOUDINARY_API_KEY || '145117342334454',
+  api_secret: process.env.CLOUDINARY_API_SECRET || 'MLYcfsRS-cbUZHr_exL2iTWHl44'
+});
+
+// Multer storage for temporary files
+const upload = multer({ dest: 'uploads/' });
 
 // Database connection
 const pool = new Pool({
@@ -21,7 +31,7 @@ const pool = new Pool({
 // Email engine (Resend)
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-// Create table if not exists
+// Create tables if not exists
 const initDb = async () => {
   try {
     await pool.query(`
@@ -36,6 +46,16 @@ const initDb = async () => {
         pet_number TEXT,
         size_key TEXT,
         total NUMERIC,
+        status TEXT DEFAULT 'pending',
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS reviews (
+        id SERIAL PRIMARY KEY,
+        customer_name TEXT,
+        comment TEXT,
+        stars INTEGER,
+        pet_image_url TEXT,
         status TEXT DEFAULT 'pending',
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
@@ -112,6 +132,63 @@ app.post('/api/paypal-webhook', async (req, res) => {
   }
   
   res.sendStatus(200);
+});
+
+// Reviews Endpoints
+app.post('/api/reviews', upload.single('image'), async (req, res) => {
+  const { customerName, comment, stars } = req.body;
+  const file = req.file;
+
+  try {
+    let imageUrl = '';
+    if (file) {
+      const uploadResult = await cloudinary.uploader.upload(file.path, {
+        folder: 'pet-jerseys-reviews'
+      });
+      imageUrl = uploadResult.secure_url;
+    }
+
+    await pool.query(
+      'INSERT INTO reviews (customer_name, comment, stars, pet_image_url) VALUES ($1, $2, $3, $4)',
+      [customerName, comment, parseInt(stars), imageUrl]
+    );
+
+    res.json({ success: true, message: 'Review submitted for approval' });
+  } catch (error) {
+    console.error('Review error:', error);
+    res.status(500).json({ success: false, error: 'Failed to submit review' });
+  }
+});
+
+app.get('/api/reviews', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM reviews WHERE status = $1 ORDER BY created_at DESC', ['approved']);
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Fetch reviews error:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch reviews' });
+  }
+});
+
+// Admin Review Management (Password protected or internal)
+app.post('/api/reviews/:id/approve', async (req, res) => {
+  const { id } = req.params;
+  try {
+    await pool.query('UPDATE reviews SET status = $1 WHERE id = $2', ['approved', id]);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ success: false });
+  }
+});
+
+app.delete('/api/reviews/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    await pool.query('DELETE FROM reviews WHERE id = $1', [id]);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ success: false });
+  }
 });
 
 // Serve static frontend if in production
