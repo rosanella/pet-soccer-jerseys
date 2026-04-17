@@ -388,7 +388,7 @@ const FullscreenImageModal = ({ imageUrl, onClose }: { imageUrl: string | null, 
   );
 };
 
-const AllReviewsModal = ({ isOpen, onClose, reviews }: { isOpen: boolean, onClose: () => void, reviews: any[] }) => {
+const AllReviewsModal = ({ isOpen, onClose, reviews, onZoom }: { isOpen: boolean, onClose: () => void, reviews: any[], onZoom: (url: string) => void }) => {
   if (!isOpen) return null;
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
@@ -407,8 +407,16 @@ const AllReviewsModal = ({ isOpen, onClose, reviews }: { isOpen: boolean, onClos
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {reviews.map((rev, i) => (
               <div key={i} className="bg-white p-4 rounded-[2rem] shadow-sm border border-gray-100 space-y-4 hover:scale-105 transition-all duration-300">
-                <div className="aspect-square rounded-2xl overflow-hidden bg-slate-100">
-                  <img src={rev.pet_image_url || "/images/hero_corgi_usa.jpg"} className="w-full h-full object-cover" alt="Happy pet" />
+                <div className="aspect-square rounded-2xl overflow-hidden bg-slate-100 cursor-zoom-in relative group/img">
+                  <img 
+                    src={rev.pet_image_url || "/images/hero_corgi_usa.jpg"} 
+                    className="w-full h-full object-cover group-hover/img:scale-110 transition-all duration-500" 
+                    onClick={() => onZoom(rev.pet_image_url || "/images/hero_corgi_usa.jpg")}
+                    alt="Happy pet" 
+                  />
+                  <div className="absolute bottom-2 right-2 bg-white/80 p-1.5 rounded-lg text-slate-900 opacity-0 group-hover/img:opacity-100 transition-opacity pointer-events-none">
+                    <Search size={14} />
+                  </div>
                 </div>
                 <div className="flex text-yellow-400 gap-0.5">
                   {[...Array(rev.stars)].map((_, j) => <Star key={j} size={10} fill="currentColor" />)}
@@ -712,7 +720,7 @@ export default function App() {
       <SizeGuideModal isOpen={sizeModalOpen} onClose={() => setSizeModalOpen(false)} />
       {selectedProduct && <CheckoutModal isOpen={checkoutModalOpen} onClose={() => setCheckoutModalOpen(false)} product={selectedProduct} orderDetails={orderDetails} />}
       <ReviewModal isOpen={reviewModalOpen} onClose={() => setReviewModalOpen(false)} onRefresh={fetchReviews} />
-      <AllReviewsModal isOpen={allReviewsOpen} onClose={() => setAllReviewsOpen(false)} reviews={reviews} />
+      <AllReviewsModal isOpen={allReviewsOpen} onClose={() => setAllReviewsOpen(false)} reviews={reviews} onZoom={setFullscreenImage} />
       <FullscreenImageModal imageUrl={fullscreenImage} onClose={() => setFullscreenImage(null)} />
     </div>
   );
