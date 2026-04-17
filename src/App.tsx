@@ -449,6 +449,7 @@ export default function App() {
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [orderDetails, setOrderDetails] = useState<any>(null);
   const [reviews, setReviews] = useState<any[]>([]);
+  const [activeReviewId, setActiveReviewId] = useState<number | null>(null);
   const [isAdmin, setIsAdmin] = useState(window.location.pathname === '/admin-reviews');
 
   useEffect(() => {
@@ -578,15 +579,33 @@ export default function App() {
           
           <div className="flex gap-4 overflow-x-auto pb-10 snap-x no-scrollbar -mx-4 px-4">
             {reviews.length > 0 ? reviews.map((rev, i) => (
-              <div key={i} className="flex-shrink-0 w-[45%] md:w-64 bg-slate-50 p-4 rounded-[2.5rem] shadow-sm border border-gray-100 space-y-3 snap-start text-left">
+              <div 
+                key={i} 
+                onClick={() => setActiveReviewId(activeReviewId === rev.id ? null : rev.id)}
+                className={`flex-shrink-0 w-[55%] md:w-64 bg-slate-50 p-5 rounded-[2.5rem] shadow-sm border border-gray-100 space-y-4 snap-start text-left transition-all duration-500 cursor-pointer ${
+                  activeReviewId === rev.id ? 'scale-110 z-20 shadow-2xl bg-white border-blue-100 !mx-4' : 'opacity-80 md:opacity-100'
+                }`}
+              >
                 <div className="aspect-square rounded-2xl overflow-hidden bg-slate-200">
-                  <img src={rev.pet_image_url || "/images/hero_corgi_usa.jpg"} className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-500" alt="Happy pet" />
+                  <img 
+                    src={rev.pet_image_url || "/images/hero_corgi_usa.jpg"} 
+                    className={`w-full h-full object-cover transition-all duration-700 ${
+                      activeReviewId === rev.id ? 'grayscale-0 scale-100' : 'grayscale'
+                    }`} 
+                    alt="Happy pet" 
+                  />
                 </div>
                 <div className="flex text-yellow-400 gap-0.5">
-                  {[...Array(rev.stars)].map((_, j) => <Star key={j} size={10} fill="currentColor" />)}
+                  {[...Array(rev.stars)].map((_, j) => <Star key={j} size={12} fill="currentColor" />)}
                 </div>
-                <p className="text-[10px] font-bold text-gray-500 leading-tight italic">"{rev.comment}"</p>
-                <p className="text-[9px] font-black uppercase text-slate-900 tracking-widest pt-1">— {rev.customer_name}</p>
+                <div className="space-y-1">
+                  <p className={`text-[11px] font-bold text-gray-500 leading-tight italic transition-all ${
+                    activeReviewId === rev.id ? 'text-slate-900 line-clamp-none' : 'line-clamp-2'
+                  }`}>
+                    "{rev.comment}"
+                  </p>
+                  <p className="text-[10px] font-black uppercase text-slate-900 tracking-widest pt-1">— {rev.customer_name}</p>
+                </div>
               </div>
             )) : (
               <p className="text-center w-full text-slate-400 font-bold italic py-10">Be the first to review!</p>
