@@ -377,11 +377,48 @@ export default function App() {
                 href="https://instagram.com/4puppies.cl" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-3 bg-white text-slate-900 px-10 py-5 rounded-2xl font-black uppercase tracking-widest hover:bg-blue-50 transition-all shadow-xl"
+                className="inline-flex items-center gap-3 bg-white text-slate-900 px-8 py-4 rounded-2xl font-black uppercase tracking-widest hover:bg-blue-50 transition-all shadow-xl text-xs md:text-sm"
               >
-                Message on Instagram <ChevronRight size={18} />
+                DM TO INSTAGRAM <ChevronRight size={16} />
               </a>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Reviews Section */}
+      <section className="py-20 bg-white overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 space-y-12">
+          <div className="text-center space-y-2">
+            <h4 className="text-xs font-black uppercase text-blue-600 tracking-[0.3em]">Customer Love</h4>
+            <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter">Pet Parents <span className="text-blue-600">Reviews</span>.</h2>
+          </div>
+          
+          <div className="flex gap-4 overflow-x-auto pb-10 snap-x no-scrollbar -mx-4 px-4">
+            {[
+              { name: "Sarah & Max", text: "Amazing quality! Max looks like a pro. USA jersey fits perfectly.", pet: "/images/hero_corgi_usa.jpg" },
+              { name: "David & Leo", text: "The custom prep took exactly 8 days. Very happy with the result!", pet: "/images/argentina_pet_jersey.jpg" },
+              { name: "Elena & Bella", text: "Best purchase ever for my pug. Shipping to Miami was super fast.", pet: "/images/colombia_front.jpg" },
+              { name: "Mark & Rocky", text: "Five stars for the athletic mesh. Very breathable for summer.", pet: "/images/mexico_front.jpg" },
+              { name: "Sofia & Toby", text: "The detail on the names is impressive. Quality is 10/10.", pet: "/images/brazil_pet_jersey.jpg" }
+            ].map((rev, i) => (
+              <div key={i} className="flex-shrink-0 w-[45%] md:w-64 bg-slate-50 p-4 rounded-[2.5rem] shadow-sm border border-gray-100 space-y-3 snap-start text-left">
+                <div className="aspect-square rounded-2xl overflow-hidden bg-slate-200">
+                  <img src={rev.pet} className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-500" alt="Happy pet" />
+                </div>
+                <div className="flex text-yellow-400 gap-0.5">
+                  {[...Array(5)].map((_, j) => <span key={j} className="text-[12px]">★</span>)}
+                </div>
+                <p className="text-[10px] font-bold text-gray-500 leading-tight italic">"{rev.text}"</p>
+                <p className="text-[9px] font-black uppercase text-slate-900 tracking-widest pt-1">— {rev.name}</p>
+              </div>
+            ))}
+          </div>
+          
+          <div className="text-center">
+            <button onClick={() => alert("Tag us @4puppies.cl on Instagram to be featured here!")} className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-blue-600 hover:text-blue-700 transition-all">
+              See all reviews <ChevronRight size={14} />
+            </button>
           </div>
         </div>
       </section>
@@ -395,10 +432,14 @@ export default function App() {
            <span className="flex items-center gap-2"><Check size={14} className="text-blue-600" /> Secure Payments</span>
            <span className="flex items-center gap-2"><Check size={14} className="text-blue-600" /> FedEx International Express</span>
         </div>
-        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-loose max-w-xl mx-auto">
-          © 2026 4PUPPIES.CL • SANTIAGO, CHILE • EXPRESS DELIVERY TO USA. <br />
-          NOT AFFILIATED WITH FIFA. ALL DESIGNS ARE CUSTOM FAN ART.
-        </p>
+        <div className="space-y-4 px-6">
+          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-loose max-w-xl mx-auto flex flex-col gap-1">
+            <span>© 2026 4PUPPIES.CL</span>
+            <span>SANTIAGO, CHILE</span>
+            <span>EXPRESS DELIVERY TO USA</span>
+            <span className="mt-2 text-[9px] opacity-70">NOT AFFILIATED WITH FIFA. ALL DESIGNS ARE CUSTOM FAN ART.</span>
+          </p>
+        </div>
       </footer>
       <SizeGuideModal isOpen={sizeModalOpen} onClose={() => setSizeModalOpen(false)} />
       {selectedProduct && <CheckoutModal isOpen={checkoutModalOpen} onClose={() => setCheckoutModalOpen(false)} product={selectedProduct} orderDetails={orderDetails} />}
