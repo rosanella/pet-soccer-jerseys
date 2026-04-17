@@ -13,7 +13,8 @@ import {
   Camera,
   MessageSquare,
   Star,
-  Upload
+  Upload,
+  Search
 } from 'lucide-react';
 
 const PRICING_TABLE: Record<string, number> = {
@@ -371,6 +372,22 @@ const ReviewModal = ({ isOpen, onClose, onRefresh }: { isOpen: boolean, onClose:
   );
 };
 
+const FullscreenImageModal = ({ imageUrl, onClose }: { imageUrl: string | null, onClose: () => void }) => {
+  if (!imageUrl) return null;
+  return (
+    <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-slate-950/95 backdrop-blur-sm transition-all" onClick={onClose}>
+      <button onClick={onClose} className="absolute top-6 right-6 p-3 bg-white/10 hover:bg-white/20 rounded-full text-white transition-all">
+        <X size={24} />
+      </button>
+      <img 
+        src={imageUrl} 
+        className="max-w-full max-h-[85vh] rounded-2xl shadow-2xl animate-in zoom-in-95 duration-300 object-contain" 
+        alt="Review detail" 
+      />
+    </div>
+  );
+};
+
 const AllReviewsModal = ({ isOpen, onClose, reviews }: { isOpen: boolean, onClose: () => void, reviews: any[] }) => {
   if (!isOpen) return null;
   return (
@@ -485,6 +502,7 @@ export default function App() {
   const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
   const [allReviewsOpen, setAllReviewsOpen] = useState(false);
+  const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [orderDetails, setOrderDetails] = useState<any>(null);
   const [reviews, setReviews] = useState<any[]>([]);
@@ -625,14 +643,25 @@ export default function App() {
                   activeReviewId === rev.id ? 'scale-110 z-20 shadow-2xl bg-white border-blue-100 !mx-4' : 'opacity-80 md:opacity-100 hover:scale-105 hover:opacity-100 hover:bg-white hover:border-blue-50'
                 }`}
               >
-                <div className="aspect-square rounded-2xl overflow-hidden bg-slate-200">
+                <div className="aspect-square rounded-2xl overflow-hidden bg-slate-200 relative group/img">
                   <img 
                     src={rev.pet_image_url || "/images/hero_corgi_usa.jpg"} 
-                    className={`w-full h-full object-cover transition-all duration-700 group-hover:grayscale-0 group-hover:scale-110 ${
-                      activeReviewId === rev.id ? 'grayscale-0 scale-100' : 'grayscale'
+                    onClick={(e) => {
+                      if (activeReviewId === rev.id) {
+                        e.stopPropagation();
+                        setFullscreenImage(rev.pet_image_url || "/images/hero_corgi_usa.jpg");
+                      }
+                    }}
+                    className={`w-full h-full object-cover transition-all duration-700 group-hover/img:scale-110 ${
+                      activeReviewId === rev.id ? 'grayscale-0 scale-100 cursor-zoom-in' : 'grayscale'
                     }`} 
                     alt="Happy pet" 
                   />
+                  {activeReviewId === rev.id && (
+                    <div className="absolute bottom-2 right-2 bg-white/80 p-1.5 rounded-lg text-slate-900 opacity-0 group-hover/img:opacity-100 transition-opacity">
+                      <Search size={14} />
+                    </div>
+                  )}
                 </div>
                 <div className="flex text-yellow-400 gap-0.5">
                   {[...Array(rev.stars)].map((_, j) => <Star key={j} size={12} fill="currentColor" />)}
@@ -684,6 +713,7 @@ export default function App() {
       {selectedProduct && <CheckoutModal isOpen={checkoutModalOpen} onClose={() => setCheckoutModalOpen(false)} product={selectedProduct} orderDetails={orderDetails} />}
       <ReviewModal isOpen={reviewModalOpen} onClose={() => setReviewModalOpen(false)} onRefresh={fetchReviews} />
       <AllReviewsModal isOpen={allReviewsOpen} onClose={() => setAllReviewsOpen(false)} reviews={reviews} />
+      <FullscreenImageModal imageUrl={fullscreenImage} onClose={() => setFullscreenImage(null)} />
     </div>
   );
 }
