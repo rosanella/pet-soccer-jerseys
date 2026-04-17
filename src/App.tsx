@@ -35,7 +35,7 @@ const PRODUCTS = [
   { id: 1, name: "USA 2026 Edition", description: "Home jersey for American pups.", images: ["/images/usa_front.jpg", "/images/usa_back.jpg"] },
   { id: 2, name: "Mexico 2026 Jersey", description: "Vibrant host nation jersey.", images: ["/images/mexico_front.jpg", "/images/mexico_back.jpg"] },
   { id: 3, name: "Canada 2026 Jersey", description: "Northern host team style.", images: ["/images/canada_pet_jersey.jpg", "/images/canada_pet_jersey.jpg"] },
-  { id: 4, name: "Argentina Champion", description: "The iconic albiceleste stripes.", images: ["/images/argentina_pet_jersey.jpg", "/images/argentina_pet_jersey.jpg"] },
+  { id: 4, name: "Argentina Champion", description: "The iconic albiceleste stripes.", images: ["/images/argentina_front.jpg", "/images/argentina_back.jpg"] },
   { id: 5, name: "Brazil Canary", description: "The most legendary soccer yellow.", images: ["/images/brazil_pet_jersey.jpg", "/images/brazil_pet_jersey.jpg"] },
   { id: 6, name: "Colombia El Tricolor", description: "The vibrant yellow of South American sun.", images: ["/images/colombia_front.jpg", "/images/colombia_back.jpg"] },
   { id: 7, name: "England Lionheart", description: "Support the Three Lions.", images: ["/images/england_pet_jersey.jpg", "/images/england_pet_jersey.jpg"] },
