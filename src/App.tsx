@@ -10,7 +10,8 @@ import {
   Globe, 
   PawPrint,
   X,
-  Camera
+  Camera,
+  MessageSquare
 } from 'lucide-react';
 
 const PRICING_TABLE: Record<string, number> = {
@@ -50,13 +51,13 @@ const Header = () => (
         <img src="/images/logo_4puppies.png" alt="4PUPPIES.CL" className="h-12 md:h-16 w-auto object-contain" />
         <span className="text-xl md:text-2xl font-black tracking-tighter text-slate-900 uppercase leading-none">4PUPPIES.CL</span>
       </div>
-      <div className="flex items-center gap-4">
-        <a href="https://instagram.com/4puppies.cl" target="_blank" rel="noopener noreferrer">
-          <Camera size={20} className="text-gray-400 hover:text-pink-600 cursor-pointer transition-colors" />
+      <div className="flex items-center gap-4 ml-auto">
+        <a href="https://instagram.com/4puppies.cl" target="_blank" rel="noopener noreferrer" className="p-1">
+          <Camera size={22} className="text-gray-400 hover:text-pink-600 cursor-pointer transition-colors" />
         </a>
         <button 
           onClick={() => document.getElementById('products')?.scrollIntoView({ behavior: 'smooth' })}
-          className="bg-blue-600 text-white px-5 py-2 rounded-full text-xs font-black uppercase tracking-widest shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all active:scale-95"
+          className="hidden sm:block bg-blue-600 text-white px-5 py-2 rounded-full text-xs font-black uppercase tracking-widest shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all active:scale-95"
         >
           Shop Collection
         </button>
@@ -304,9 +305,9 @@ export default function App() {
   return (
     <div className="min-h-screen bg-[#F9FAFB] font-sans selection:bg-blue-600 selection:text-white">
       <Header />
-      <section className="relative pt-12 pb-24 px-4 md:px-6">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-          <div className="space-y-8 text-center lg:text-left z-10">
+      <section className="relative pt-6 md:pt-16 pb-20 px-4 md:px-6">
+        <div className="max-w-7xl mx-auto flex flex-col-reverse lg:grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+          <div className="space-y-6 md:space-y-8 text-center lg:text-left z-10">
             <div className="inline-flex items-center gap-2 bg-white px-4 py-2 rounded-full text-blue-600 text-[10px] font-black uppercase tracking-[0.2em] border border-blue-50 shadow-sm">
               <Globe size={14} /> 4PUPPIES.CL Global Shop
             </div>
@@ -358,6 +359,29 @@ export default function App() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {PRODUCTS.map(p => <ProductCard key={p.id} product={p} onOpenSizeChart={() => setSizeModalOpen(true)} onStartCheckout={startCheckout} />)}
+          </div>
+
+          {/* Custom Team Request Section */}
+          <div className="mt-24 p-8 md:p-12 bg-slate-900 rounded-[3rem] text-center space-y-6 border border-slate-800 shadow-2xl">
+            <div className="inline-flex items-center gap-2 bg-blue-600/10 text-blue-400 px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest border border-blue-600/20">
+              <MessageSquare size={14} /> Custom Requests
+            </div>
+            <h3 className="text-3xl md:text-5xl font-black text-white uppercase tracking-tighter leading-none">
+              Don't see your <br /><span className="text-blue-500">favorite team?</span>
+            </h3>
+            <p className="text-slate-400 font-bold italic max-w-lg mx-auto text-sm md:text-base">
+              "We handle custom orders for any team or national selection. Contact us directly to start your custom pet jersey!"
+            </p>
+            <div className="pt-4">
+              <a 
+                href="https://instagram.com/4puppies.cl" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-3 bg-white text-slate-900 px-10 py-5 rounded-2xl font-black uppercase tracking-widest hover:bg-blue-50 transition-all shadow-xl"
+              >
+                Message on Instagram <ChevronRight size={18} />
+              </a>
+            </div>
           </div>
         </div>
       </section>
