@@ -138,30 +138,24 @@ const CheckoutModal = ({ isOpen, onClose, product, orderDetails }: { isOpen: boo
 
     try {
       // POST to our backend to save order and send email
-      const response = await fetch('/api/orders', {
+      // Create Stripe Checkout Session
+      const response = await fetch('/api/create-checkout-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(fullOrder)
+        body: JSON.stringify({
+          product,
+          orderDetails,
+          customerData: formData
+        })
       });
       
-      const { orderId } = await response.json();
+      const session = await response.json();
       
-      // After saving, redirect to PayPal
-      const businessEmail = "rosanella.galindo@gmail.com"; 
-      const itemName = `${product.name} (Pet: ${orderDetails.petName})`;
-      const params = new URLSearchParams({
-        cmd: "_xclick",
-        business: businessEmail,
-        item_name: itemName,
-        amount: orderDetails.price.toString(),
-        currency_code: "USD",
-        no_shipping: "2",
-        custom: orderId.toString(), // Send order ID to PayPal
-        notify_url: "https://globalshop.4puppies.cl/api/paypal-webhook", // Your webhook URL
-        return: window.location.origin
-      });
-
-      window.location.href = `https://www.paypal.com/cgi-bin/webscr?${params.toString()}`;
+      if (session.url) {
+        window.location.href = session.url;
+      } else {
+        throw new Error("Failed to create checkout session");
+      }
     } catch (error) {
       console.error(error);
       alert("There was an error processing your order. Please try again.");
@@ -219,7 +213,7 @@ const CheckoutModal = ({ isOpen, onClose, product, orderDetails }: { isOpen: boo
           </div>
 
           <button disabled={isSubmitting} type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-2xl shadow-xl shadow-blue-100 transition-all active:scale-[0.98] uppercase tracking-[0.1em] text-sm flex items-center justify-center gap-2">
-            {isSubmitting ? 'Processing...' : 'Proceed to PayPal'} <ChevronRight size={18} strokeWidth={3} />
+            {isSubmitting ? 'Connecting...' : 'Secure Checkout with Card'} <ShieldCheck size={18} strokeWidth={3} />
           </button>
         </form>
       </div>

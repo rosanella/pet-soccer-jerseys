@@ -6,6 +6,7 @@ const { Pool } = require('pg');
 const path = require('path');
 const { Resend } = require('resend');
 require('dotenv').config();
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 const app = express();
 app.use(cors());
@@ -134,6 +135,65 @@ app.post('/api/paypal-webhook', async (req, res) => {
   }
   
   res.sendStatus(200);
+});
+
+// Create Stripe Checkout Session
+app.post('/api/create-checkout-session', async (req, res) => {
+  const { product, orderDetails, customerData } = req.body;
+
+  try {
+    // 1. Create order in DB
+    const orderResult = await pool.query(
+      `INSERT INTO orders 
+      (customer_name, address, email, phone, product_name, pet_name, pet_number, size_key, total, status) 
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id`,
+      [
+        customerData.customerName,
+        customerData.address,
+        customerData.email,
+        customerData.phone,
+        product.name,
+        orderDetails.petName,
+        orderDetails.petNumber,
+        orderDetails.key,
+        orderDetails.price,
+        'pending'
+      ]
+    );
+
+    const orderId = orderResult.rows[0].id;
+
+    // 2. Create Stripe Session
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: `${product.name} (Pet: ${orderDetails.petName})`,
+              description: `Size: ${orderDetails.key} • Number: ${orderDetails.petNumber}`,
+            },
+            unit_amount: orderDetails.price * 100, // Stripe uses cents
+          },
+          quantity: 1,
+        },
+      ],
+      mode: 'payment',
+      success_url: `${process.env.FRONTEND_URL || req.headers.origin}/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.FRONTEND_URL || req.headers.origin}/`,
+      customer_email: customerData.email,
+      client_reference_id: orderId.toString(),
+      metadata: {
+        orderId: orderId.toString()
+      }
+    });
+
+    res.json({ id: session.id, url: session.url });
+  } catch (error) {
+    console.error('Stripe Session Error:', error);
+    res.status(500).json({ error: error.message });
+  }
 });
 
 // Reviews Endpoints
