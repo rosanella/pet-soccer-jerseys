@@ -163,7 +163,10 @@ app.post('/api/create-checkout-session', async (req, res) => {
 
     const orderId = orderResult.rows[0].id;
 
-    // 2. Create Stripe Session
+    // 2. Create Stripe Session with Breakdown
+    const shippingCost = 25; // Define fixed shipping cost (USD)
+    const itemPrice = orderDetails.price - shippingCost;
+
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: [
@@ -171,10 +174,21 @@ app.post('/api/create-checkout-session', async (req, res) => {
           price_data: {
             currency: 'usd',
             product_data: {
-              name: `${product.name} (Pet: ${orderDetails.petName})`,
-              description: `Size: ${orderDetails.key} • Number: ${orderDetails.petNumber}`,
+              name: `${product.name} (Custom Pet Jersey)`,
+              description: `Size: ${orderDetails.key} • Pet: ${orderDetails.petName} (#${orderDetails.petNumber})`,
             },
-            unit_amount: orderDetails.price * 100, // Stripe uses cents
+            unit_amount: Math.round(itemPrice * 100), // Cents
+          },
+          quantity: 1,
+        },
+        {
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: `FedEx Express International Shipping`,
+              description: `4-5 Days Delivery from Chile to USA`,
+            },
+            unit_amount: Math.round(shippingCost * 100),
           },
           quantity: 1,
         },
