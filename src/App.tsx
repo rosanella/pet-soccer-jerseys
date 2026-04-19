@@ -560,7 +560,7 @@ export default function App() {
               <Globe size={14} /> 4PUPPIES.CL Global Shop
             </div>
             <h2 className="text-5xl md:text-8xl font-black tracking-tighter leading-[0.85] text-gray-900 uppercase">
-              CUSTOM PET <br /><span className="text-blue-600">FOOTBALL</span><br />JERSEYS.
+              CUSTOM <br /><span className="text-blue-600">FOOTBALL</span><br />PET JERSEYS.
             </h2>
             <p className="text-base md:text-xl text-gray-500 font-bold max-w-xl mx-auto lg:mx-0 italic">
               Handmade in Chile • FedEx Express to USA (4-5 days) • Premium Athletic Mesh • 8-Day Prep Time.
