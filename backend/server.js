@@ -50,8 +50,14 @@ const initDb = async () => {
         size_key TEXT,
         total NUMERIC,
         status TEXT DEFAULT 'pending',
+        tracking_number TEXT,
+        shipped_at TIMESTAMP WITH TIME ZONE,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
+
+      -- Ensure columns exist if table already existed
+      ALTER TABLE orders ADD COLUMN IF NOT EXISTS tracking_number TEXT;
+      ALTER TABLE orders ADD COLUMN IF NOT EXISTS shipped_at TIMESTAMP WITH TIME ZONE;
 
       CREATE TABLE IF NOT EXISTS reviews (
         id SERIAL PRIMARY KEY,
@@ -274,6 +280,72 @@ app.delete('/api/reviews/:id', async (req, res) => {
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ success: false });
+  }
+});
+
+// Admin Order Management
+app.get('/api/admin/orders', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM orders ORDER BY created_at DESC');
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Fetch orders error:', error);
+    res.status(500).json({ error: 'Failed to fetch orders' });
+  }
+});
+
+app.post('/api/admin/orders/:id/track', async (req, res) => {
+  const { id } = req.params;
+  const { trackingNumber } = req.body;
+
+  try {
+    // 1. Update DB
+    const result = await pool.query(
+      'UPDATE orders SET tracking_number = $1, status = $2, shipped_at = CURRENT_TIMESTAMP WHERE id = $3 RETURNING *',
+      [trackingNumber, 'shipped', id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
+    const order = result.rows[0];
+
+    // 2. Send Tracking Email
+    const trackingLink = `https://www.fedex.com/fedextrack/?trknbr=${trackingNumber}`;
+    
+    await resend.emails.send({
+      from: '4PUPPIES.CL <ventas@4puppies.cl>',
+      to: order.email,
+      subject: `Your order is on its way! 🐾 Tracking: ${trackingNumber}`,
+      html: `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 20px;">
+          <h2 style="color: #2563eb; text-transform: uppercase; letter-spacing: -1px;">Your pet's jersey is traveling! ✈️</h2>
+          <p>Hi ${order.customer_name},</p>
+          <p>Great news! Your custom pet jersey for <b>${order.pet_name}</b> has been crafted and handed over to FedEx Express.</p>
+          
+          <div style="background: #f8fafc; padding: 20px; border-radius: 15px; margin: 20px 0;">
+            <p style="margin: 0; font-size: 12px; color: #64748b; text-transform: uppercase; font-weight: bold;">Tracking Number</p>
+            <p style="margin: 5px 0; font-size: 24px; font-weight: 900; color: #0f172a;">${trackingNumber}</p>
+            <a href="${trackingLink}" style="display: inline-block; background: #2563eb; color: white; padding: 12px 25px; border-radius: 10px; text-decoration: none; font-weight: bold; margin-top: 10px;">Track Order on FedEx</a>
+          </div>
+
+          <p style="font-size: 13px; color: #64748b;">
+            <b>Important:</b> As per our Store Policies, please monitor your shipment to ensure someone is available for delivery. 4Puppies.cl is not responsible for delays caused by customs or missed delivery attempts.
+          </p>
+          
+          <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
+          <p style="font-size: 11px; color: #94a3b8; text-align: center;">
+            4PUPPIES.CL • SANTIAGO, CHILE • EXPRESS DELIVERY TO USA
+          </p>
+        </div>
+      `
+    });
+
+    res.json({ success: true, order });
+  } catch (error) {
+    console.error('Tracking update error:', error);
+    res.status(500).json({ error: error.message });
   }
 });
 

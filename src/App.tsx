@@ -15,7 +15,8 @@ import {
   Star,
   Upload,
   Search,
-  FileText
+  FileText,
+  ExternalLink
 } from 'lucide-react';
 
 const PRICING_TABLE: Record<string, number> = {
@@ -153,6 +154,7 @@ const TermsModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void 
           title: "Shipping & Delivery (FedEx)",
           list: [
             "Carrier: We ship via FedEx Express (estimated 4 to 5 business days).",
+            "Tracking Responsibility: Customers are responsible for monitoring their shipment using the provided tracking number. It is essential to ensure someone is available for delivery and to respond promptly to any customs inquiries.",
             "Delays: 4Puppies.cl is not responsible for delays caused by the carrier, weather, or customs clearance. Claims must be filed directly with FedEx.",
             "Address: We do not ship to P.O. Boxes. A physical address and a contact phone number are required.",
             "Shipping Damage: If your package arrives damaged, you must report it to us within 48 hours of delivery, including photos of the damaged packaging and product."
@@ -199,6 +201,7 @@ const TermsModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void 
           title: "Envío y Entrega (FedEx)",
           list: [
             "Transportista: Enviamos a través de FedEx Express (estimado de 4 a 5 días hábiles).",
+            "Responsabilidad de Seguimiento: El cliente es responsable de monitorear su envío con el número proporcionado. Es esencial asegurar que alguien esté disponible para la entrega y responder rápido a cualquier consulta de aduanas.",
             "Retrasos: 4Puppies.cl no es responsable de los retrasos causados por el transportista, el clima o el despacho de aduanas. Las reclamaciones deben presentarse directamente ante FedEx.",
             "Dirección: No enviamos a casillas de correo (P.O. Boxes). Se requiere una dirección física y un número de teléfono de contacto.",
             "Daños en el Envío: Si su paquete llega dañado, debe informarnos dentro de las 48 horas posteriores a la entrega, incluyendo fotos del embalaje y del producto dañado."
@@ -596,6 +599,132 @@ const AllReviewsModal = ({ isOpen, onClose, reviews, onZoom }: { isOpen: boolean
   );
 };
 
+const AdminOrders = ({ onBack }: { onBack: () => void }) => {
+  const [orders, setOrders] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [trackingInputs, setTrackingInputs] = useState<Record<number, string>>({});
+
+  const fetchOrders = async () => {
+    try {
+      const resp = await fetch('/api/admin/orders');
+      const data = await resp.json();
+      setOrders(data);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchOrders();
+  }, []);
+
+  const handleTrack = async (orderId: number) => {
+    const trackingNumber = trackingInputs[orderId];
+    if (!trackingNumber) return alert("Please enter tracking number");
+
+    try {
+      const resp = await fetch(`/api/admin/orders/${orderId}/track`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ trackingNumber })
+      });
+      if (resp.ok) {
+        alert("Tracking sent to customer! 📧");
+        fetchOrders();
+      }
+    } catch (error) {
+      alert("Error sending tracking");
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-50 p-6">
+      <div className="max-w-6xl mx-auto space-y-8">
+        <div className="flex justify-between items-center bg-white p-6 rounded-[2rem] shadow-sm">
+          <div>
+            <h1 className="text-3xl font-black uppercase tracking-tighter flex items-center gap-3">
+              <Truck className="text-blue-600" size={32} /> Order <span className="text-blue-600">Fulfillment</span>
+            </h1>
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Manage sales & FedEx tracking</p>
+          </div>
+          <button onClick={onBack} className="bg-slate-900 text-white px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all">Back to Site</button>
+        </div>
+
+        {loading ? <p className="text-center py-20 font-bold text-gray-400">Loading orders...</p> : (
+          <div className="grid gap-6">
+            {orders.length === 0 && <p className="text-center py-10 text-gray-400 font-bold">No orders found yet.</p>}
+            {orders.map((order) => (
+              <div key={order.id} className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100 flex flex-col lg:flex-row gap-8">
+                <div className="flex-grow space-y-4">
+                  <div className="flex justify-between items-start">
+                    <div className="space-y-1">
+                      <h4 className="font-black text-slate-900 uppercase text-lg leading-none">{order.customer_name}</h4>
+                      <p className="text-xs font-bold text-blue-600">{order.email} • {order.phone}</p>
+                    </div>
+                    <div className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${
+                      order.status === 'shipped' ? 'bg-green-100 text-green-600' : 'bg-orange-100 text-orange-600'
+                    }`}>
+                      {order.status}
+                    </div>
+                  </div>
+                  
+                  <div className="grid md:grid-cols-2 gap-6 bg-slate-50 p-5 rounded-2xl">
+                    <div className="space-y-1">
+                      <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Product Details</p>
+                      <p className="text-sm font-bold text-slate-900">{order.product_name} ({order.size_key})</p>
+                      <p className="text-sm font-bold text-slate-600 italic">Pet: {order.pet_name} (#{order.pet_number})</p>
+                    </div>
+                    <div className="space-y-1 text-right md:text-left">
+                      <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Amount Paid</p>
+                      <p className="text-xl font-black text-blue-600 leading-none">${order.total}</p>
+                      <p className="text-[9px] font-bold text-gray-400 uppercase">{new Date(order.created_at).toLocaleDateString()}</p>
+                    </div>
+                    <div className="md:col-span-2 pt-3 border-t border-gray-200">
+                      <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Shipping Address</p>
+                      <p className="text-xs font-medium text-slate-700 leading-relaxed">{order.address}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="lg:w-80 flex flex-col justify-center gap-4 bg-blue-50/30 p-6 rounded-[2rem] border border-blue-50">
+                  <div className="space-y-1">
+                    <label className="text-[9px] font-black text-blue-600 uppercase tracking-widest ml-1">FedEx Tracking #</label>
+                    <input 
+                      type="text" 
+                      placeholder="Enter Number"
+                      className="w-full bg-white border-2 border-transparent p-3 rounded-xl text-sm font-black focus:border-blue-600 outline-none transition-all"
+                      value={trackingInputs[order.id] || order.tracking_number || ''}
+                      onChange={(e) => setTrackingInputs({...trackingInputs, [order.id]: e.target.value})}
+                    />
+                  </div>
+                  <button 
+                    onClick={() => handleTrack(order.id)}
+                    className="w-full bg-blue-600 text-white font-black py-4 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-lg shadow-blue-100 flex items-center justify-center gap-2"
+                  >
+                    Send Tracking Email <Check size={14} />
+                  </button>
+                  {order.tracking_number && (
+                    <a 
+                      href={`https://www.fedex.com/fedextrack/?trknbr=${order.tracking_number}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-center text-[9px] font-black text-blue-600 uppercase tracking-widest flex items-center justify-center gap-1 hover:underline"
+                    >
+                      View on FedEx <ExternalLink size={12} />
+                    </a>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 const AdminReviews = ({ onBack }: { onBack: () => void }) => {
   const [reviews, setReviews] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -678,19 +807,29 @@ export default function App() {
   const [orderDetails, setOrderDetails] = useState<any>(null);
   const [reviews, setReviews] = useState<any[]>([]);
   const [activeReviewId, setActiveReviewId] = useState<number | null>(null);
-  const [isAdmin, setIsAdmin] = useState(window.location.pathname === '/admin-reviews');
+  const [adminView, setAdminView] = useState<'none' | 'reviews' | 'orders'>(
+    window.location.pathname === '/admin-reviews' ? 'reviews' : 
+    window.location.pathname === '/admin-orders' ? 'orders' : 'none'
+  );
 
   useEffect(() => {
     fetchReviews();
     // Handle URL changes
-    const handlePopState = () => setIsAdmin(window.location.pathname === '/admin-reviews');
+    const handlePopState = () => {
+      const path = window.location.pathname;
+      if (path === '/admin-reviews') setAdminView('reviews');
+      else if (path === '/admin-orders') setAdminView('orders');
+      else setAdminView('none');
+    };
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
   const navigateTo = (path: string) => {
     window.history.pushState({}, '', path);
-    setIsAdmin(path === '/admin-reviews');
+    if (path === '/admin-reviews') setAdminView('reviews');
+    else if (path === '/admin-orders') setAdminView('orders');
+    else setAdminView('none');
   };
 
   const fetchReviews = async () => {
@@ -709,9 +848,8 @@ export default function App() {
     setCheckoutModalOpen(true);
   };
 
-  if (isAdmin) {
-    return <AdminReviews onBack={() => navigateTo('/')} />;
-  }
+  if (adminView === 'reviews') return <AdminReviews onBack={() => navigateTo('/')} />;
+  if (adminView === 'orders') return <AdminOrders onBack={() => navigateTo('/')} />;
 
   return (
     <div className="min-h-screen bg-[#F9FAFB] font-sans selection:bg-blue-600 selection:text-white">
