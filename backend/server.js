@@ -245,7 +245,7 @@ app.post('/api/webhook', express.raw({ type: 'application/json' }), async (req, 
 
       // 2. Send Confirmation Email to CUSTOMER
       await resend.emails.send({
-        from: '4PUPPIES.CL <ventas@4puppies.cl>',
+        from: '4PUPPIES.CL <sales@4puppies.cl>',
         to: order.email,
         subject: `Order Confirmed! 🐾 Jersey for ${order.pet_name} is in production`,
         html: `
@@ -275,8 +275,8 @@ app.post('/api/webhook', express.raw({ type: 'application/json' }), async (req, 
 
       // 3. Send Notification to OWNER (Internal)
       await resend.emails.send({
-        from: '4PUPPIES.CL <ventas@4puppies.cl>',
-        to: 'ventas@4puppies.cl',
+        from: '4PUPPIES.CL <sales@4puppies.cl>',
+        to: 'sales@4puppies.cl',
         subject: `NEW SALE! $${order.total} - ${order.customer_name}`,
         html: `<p>New order #${order.id} from ${order.email}. Check Admin Panel for details.</p>`
       });
@@ -388,7 +388,7 @@ app.post('/api/admin/orders/:id/track', async (req, res) => {
     const trackingLink = `https://www.fedex.com/fedextrack/?trknbr=${trackingNumber}`;
     
     await resend.emails.send({
-      from: '4PUPPIES.CL <ventas@4puppies.cl>',
+      from: '4PUPPIES.CL <sales@4puppies.cl>',
       to: order.email,
       subject: `Your order is on its way! 🐾 Tracking: ${trackingNumber}`,
       html: `
