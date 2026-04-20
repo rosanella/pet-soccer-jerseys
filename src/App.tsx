@@ -276,9 +276,13 @@ const TermsModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void 
 const CheckoutModal = ({ isOpen, onClose, product, orderDetails, onOpenTerms }: { isOpen: boolean, onClose: () => void, product: any, orderDetails: any, onOpenTerms: () => void }) => {
   const [formData, setFormData] = useState({
     customerName: '',
-    address: '',
     email: '',
-    phone: ''
+    phone: '',
+    address: '',
+    city: '',
+    region: '',
+    zipcode: '',
+    country: ''
   });
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -331,7 +335,7 @@ const CheckoutModal = ({ isOpen, onClose, product, orderDetails, onOpenTerms }: 
           <div className="p-3 bg-blue-100 rounded-2xl text-blue-600"><Truck size={24} /></div>
           <div>
             <h2 className="text-2xl font-black uppercase tracking-tight leading-none">Shipping Details</h2>
-            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">FedEx Express Shipping to USA</p>
+            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">FedEx Worldwide Express Delivery</p>
           </div>
         </div>
 
@@ -341,11 +345,6 @@ const CheckoutModal = ({ isOpen, onClose, product, orderDetails, onOpenTerms }: 
             <input required type="text" className="w-full bg-slate-50 border-2 border-transparent p-3 rounded-xl text-sm font-bold focus:bg-white focus:border-blue-600 outline-none transition-all" 
               value={formData.customerName} onChange={e => setFormData({...formData, customerName: e.target.value})} />
           </div>
-          <div className="space-y-1">
-            <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Delivery Address (USA)</label>
-            <textarea required className="w-full bg-slate-50 border-2 border-transparent p-3 rounded-xl text-sm font-bold focus:bg-white focus:border-blue-600 outline-none transition-all h-24" 
-              value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} />
-          </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
               <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Email</label>
@@ -353,9 +352,39 @@ const CheckoutModal = ({ isOpen, onClose, product, orderDetails, onOpenTerms }: 
                 value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} />
             </div>
             <div className="space-y-1">
-              <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Phone</label>
+              <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Phone (+Code)</label>
               <input required type="tel" className="w-full bg-slate-50 border-2 border-transparent p-3 rounded-xl text-sm font-bold focus:bg-white focus:border-blue-600 outline-none transition-all" 
                 value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} />
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Country</label>
+            <input required type="text" placeholder="e.g. France, USA, UK" className="w-full bg-slate-50 border-2 border-transparent p-3 rounded-xl text-sm font-bold focus:bg-white focus:border-blue-600 outline-none transition-all" 
+              value={formData.country} onChange={e => setFormData({...formData, country: e.target.value})} />
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Address & House #</label>
+            <input required type="text" placeholder="Street name and number" className="w-full bg-slate-50 border-2 border-transparent p-3 rounded-xl text-sm font-bold focus:bg-white focus:border-blue-600 outline-none transition-all" 
+              value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} />
+          </div>
+
+          <div className="grid grid-cols-3 gap-2">
+            <div className="space-y-1">
+              <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Town/City</label>
+              <input required type="text" className="w-full bg-slate-50 border-2 border-transparent p-3 rounded-xl text-sm font-bold focus:bg-white focus:border-blue-600 outline-none transition-all" 
+                value={formData.city} onChange={e => setFormData({...formData, city: e.target.value})} />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">State/Zip</label>
+              <input required type="text" className="w-full bg-slate-50 border-2 border-transparent p-3 rounded-xl text-sm font-bold focus:bg-white focus:border-blue-600 outline-none transition-all" 
+                value={formData.zipcode} onChange={e => setFormData({...formData, zipcode: e.target.value})} />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Region</label>
+              <input required type="text" className="w-full bg-slate-50 border-2 border-transparent p-3 rounded-xl text-sm font-bold focus:bg-white focus:border-blue-600 outline-none transition-all" 
+                value={formData.region} onChange={e => setFormData({...formData, region: e.target.value})} />
             </div>
           </div>
 

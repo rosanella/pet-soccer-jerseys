@@ -42,6 +42,10 @@ const initDb = async () => {
         id SERIAL PRIMARY KEY,
         customer_name TEXT,
         address TEXT,
+        city TEXT,
+        region TEXT,
+        zipcode TEXT,
+        country TEXT,
         email TEXT,
         phone TEXT,
         product_name TEXT,
@@ -55,7 +59,11 @@ const initDb = async () => {
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
 
-      -- Ensure columns exist if table already existed
+      -- Ensure new columns exist
+      ALTER TABLE orders ADD COLUMN IF NOT EXISTS city TEXT;
+      ALTER TABLE orders ADD COLUMN IF NOT EXISTS region TEXT;
+      ALTER TABLE orders ADD COLUMN IF NOT EXISTS zipcode TEXT;
+      ALTER TABLE orders ADD COLUMN IF NOT EXISTS country TEXT;
       ALTER TABLE orders ADD COLUMN IF NOT EXISTS tracking_number TEXT;
       ALTER TABLE orders ADD COLUMN IF NOT EXISTS shipped_at TIMESTAMP WITH TIME ZONE;
 
@@ -151,13 +159,17 @@ app.post('/api/create-checkout-session', async (req, res) => {
     // 1. Create order in DB
     const orderResult = await pool.query(
       `INSERT INTO orders 
-      (customer_name, address, email, phone, product_name, pet_name, pet_number, size_key, total, status) 
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id`,
+      (customer_name, email, phone, address, city, region, zipcode, country, product_name, pet_name, pet_number, size_key, total, status) 
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING id`,
       [
         customerData.customerName,
-        customerData.address,
         customerData.email,
         customerData.phone,
+        customerData.address,
+        customerData.city,
+        customerData.region,
+        customerData.zipcode,
+        customerData.country,
         product.name,
         orderDetails.petName,
         orderDetails.petNumber,
@@ -259,7 +271,11 @@ app.post('/api/webhook', express.raw({ type: 'application/json' }), async (req, 
               <h3 style="margin-top: 0; color: #2563eb;">Order Summary:</h3>
               <p><b>Product:</b> ${order.product_name} (${order.size_key})</p>
               <p><b>Pet:</b> ${order.pet_name} (#${order.pet_number})</p>
-              <p><b>Delivery Address:</b> ${order.address}</p>
+              <p><b>Delivery Address:</b><br/>
+                ${order.address}<br/>
+                ${order.city}, ${order.region} ${order.zipcode}<br/>
+                <b>${order.country}</b>
+              </p>
             </div>
 
             <p style="background: #fffbeb; border: 1px solid #fef3c7; padding: 15px; border-radius: 10px; font-size: 13px; color: #92400e;">
