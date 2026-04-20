@@ -204,6 +204,7 @@ app.post('/api/create-checkout-session', async (req, res) => {
       cancel_url: `${process.env.FRONTEND_URL || req.headers.origin}/`,
       customer_email: customerData.email,
       client_reference_id: orderId.toString(),
+      allow_promotion_codes: true,
       metadata: {
         orderId: orderId.toString()
       }
