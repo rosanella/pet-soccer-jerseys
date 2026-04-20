@@ -116,58 +116,153 @@ const SizeGuideModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => v
 };
 
 const TermsModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) => {
+  const [lang, setLang] = useState<'en' | 'es'>('en');
   if (!isOpen) return null;
+
+  const content = {
+    en: {
+      title: "Store Policies",
+      subtitle: "International Shipping & Terms",
+      sections: [
+        {
+          id: "01",
+          title: "Customs, Duties & Taxes (DDU)",
+          text: "All international orders are shipped DDU (Delivered Duty Unpaid). 4Puppies.cl does not collect VAT, GST, or any import taxes at checkout. The recipient is solely responsible for paying any local customs duties or taxes required by their country's authorities. Failure to pay these fees will result in the package being returned or abandoned; no refunds will be issued for shipping costs."
+        },
+        {
+          id: "02",
+          title: "Production & Preparation Time",
+          text: "Our products are handcrafted with care. Please allow 8 to 10 business days for order preparation before shipping. By purchasing, you acknowledge and accept this processing time."
+        },
+        {
+          id: "03",
+          title: "Sizing, Colors & Returns",
+          list: [
+            "Sizing: We provide a detailed Size Chart for every product. It is the customer's responsibility to measure their pet correctly. We do not offer exchanges or returns for sizing errors.",
+            "Colors: Please note that actual product colors may vary slightly from what appears on your screen due to monitor settings and lighting.",
+            "Final Sale: All international sales are final."
+          ]
+        },
+        {
+          id: "04",
+          title: "Cancellation Policy",
+          text: "You may request a full cancellation and refund only within 24 hours of placing your order. After 24 hours, production begins, and cancellations will no longer be accepted."
+        },
+        {
+          id: "05",
+          title: "Shipping & Delivery (FedEx)",
+          list: [
+            "Carrier: We ship via FedEx Express (estimated 4 to 5 business days).",
+            "Delays: 4Puppies.cl is not responsible for delays caused by the carrier, weather, or customs clearance. Claims must be filed directly with FedEx.",
+            "Address: We do not ship to P.O. Boxes. A physical address and a contact phone number are required.",
+            "Shipping Damage: If your package arrives damaged, you must report it to us within 48 hours of delivery, including photos of the damaged packaging and product."
+          ]
+        },
+        {
+          id: "06",
+          title: "Unclaimed or Returned Packages",
+          text: "If a package is returned due to failed delivery attempts (customer not home), incorrect address, or refusal to pay customs duties, the customer must pay a new shipping fee for reshipment. Original shipping fees are non-refundable."
+        }
+      ],
+      button: "Understood"
+    },
+    es: {
+      title: "Políticas de la Tienda",
+      subtitle: "Envíos Internacionales y Términos",
+      sections: [
+        {
+          id: "01",
+          title: "Aduanas, Aranceles e Impuestos (DDU)",
+          text: "Todos los pedidos internacionales se envían DDU (Entrega con Derechos No Pagados). 4Puppies.cl no recauda IVA, GST ni ningún impuesto de importación al momento de la compra. El destinatario es el único responsable de pagar cualquier arancel aduanero local o impuesto requerido por las autoridades de su país. El impago de estas tasas resultará en la devolución o abandono del paquete; no se realizarán reembolsos por gastos de envío."
+        },
+        {
+          id: "02",
+          title: "Tiempo de Producción y Preparación",
+          text: "Nuestros productos están hechos a mano con cuidado. Por favor, considere de 8 a 10 días hábiles para la preparación del pedido antes del envío. Al comprar, usted reconoce y acepta este tiempo de procesamiento."
+        },
+        {
+          id: "03",
+          title: "Tallas, Colores y Devoluciones",
+          list: [
+            "Tallas: Proporcionamos una Tabla de Tallas detallada para cada producto. Es responsabilidad del cliente medir a su mascota correctamente. No ofrecemos cambios ni devoluciones por errores de talla.",
+            "Colores: Tenga en cuenta que los colores reales del producto pueden variar ligeramente de lo que aparece en su pantalla debido a la configuración del monitor y la iluminación.",
+            "Venta Final: Todas las ventas internacionales son finales."
+          ]
+        },
+        {
+          id: "04",
+          title: "Política de Cancelación",
+          text: "Puede solicitar una cancelación total y reembolso solo dentro de las 24 horas posteriores a la realización de su pedido. Después de 24 horas, comienza la producción y ya no se aceptarán cancelaciones."
+        },
+        {
+          id: "05",
+          title: "Envío y Entrega (FedEx)",
+          list: [
+            "Transportista: Enviamos a través de FedEx Express (estimado de 4 a 5 días hábiles).",
+            "Retrasos: 4Puppies.cl no es responsable de los retrasos causados por el transportista, el clima o el despacho de aduanas. Las reclamaciones deben presentarse directamente ante FedEx.",
+            "Dirección: No enviamos a casillas de correo (P.O. Boxes). Se requiere una dirección física y un número de teléfono de contacto.",
+            "Daños en el Envío: Si su paquete llega dañado, debe informarnos dentro de las 48 horas posteriores a la entrega, incluyendo fotos del embalaje y del producto dañado."
+          ]
+        },
+        {
+          id: "06",
+          title: "Paquetes No Reclamados o Devueltos",
+          text: "Si un paquete es devuelto debido a intentos de entrega fallidos (cliente no se encuentra en casa), dirección incorrecta o negativa a pagar aranceles aduaneros, el cliente deberá pagar una nueva tarifa de envío para el reenvío. Los gastos de envío originales no son reembolsables."
+        }
+      ],
+      button: "Entendido"
+    }
+  };
+
+  const current = content[lang];
+
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-      <div className="bg-white rounded-[2.5rem] max-w-2xl w-full max-h-[80vh] overflow-hidden shadow-2xl relative flex flex-col">
-        <div className="p-8 md:p-10 border-b border-gray-100 flex justify-between items-center bg-slate-50">
+      <div className="bg-white rounded-[2.5rem] max-w-2xl w-full max-h-[85vh] overflow-hidden shadow-2xl relative flex flex-col scale-in-center">
+        <div className="p-6 md:p-8 border-b border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-slate-50">
           <div className="flex items-center gap-3">
             <div className="p-3 bg-blue-100 rounded-2xl text-blue-600"><FileText size={24} /></div>
             <div>
-              <h2 className="text-2xl font-black uppercase tracking-tight leading-none">Terms & Shipping</h2>
-              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">Legal Policy & Processing Times</p>
+              <h2 className="text-xl md:text-2xl font-black uppercase tracking-tight leading-none">{current.title}</h2>
+              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">{current.subtitle}</p>
             </div>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-gray-200 rounded-full transition-colors"><X size={24} /></button>
+          <div className="flex items-center gap-2 bg-white p-1 rounded-xl border border-gray-200">
+            <button onClick={() => setLang('en')} className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all ${lang === 'en' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-400 hover:text-blue-600'}`}>English</button>
+            <button onClick={() => setLang('es')} className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all ${lang === 'es' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-400 hover:text-blue-600'}`}>Español</button>
+          </div>
+          <button onClick={onClose} className="absolute top-6 right-6 p-2 hover:bg-gray-200 rounded-full transition-colors hidden md:block"><X size={24} /></button>
         </div>
         
-        <div className="p-8 md:p-10 overflow-y-auto space-y-8 text-sm text-gray-600 leading-relaxed custom-scrollbar">
-          <section className="space-y-3">
-            <h3 className="font-black text-slate-900 uppercase tracking-widest text-xs flex items-center gap-2">
-              <div className="w-1.5 h-1.5 bg-blue-600 rounded-full" /> 01. Custom Orders Policy
-            </h3>
-            <p>Each jersey at <strong>4PUPPIES.CL</strong> is handmade and custom-tailored to your pet's measurements and selected number/name. Due to the highly personalized nature of our products, <strong>we do not accept returns or exchanges</strong> unless the product arrives damaged or with a manufacturing defect.</p>
-          </section>
-
-          <section className="space-y-3">
-            <h3 className="font-black text-slate-900 uppercase tracking-widest text-xs flex items-center gap-2">
-              <div className="w-1.5 h-1.5 bg-blue-600 rounded-full" /> 02. Processing & Prep Time
-            </h3>
-            <p>We take pride in our craftsmanship. Please allow <strong>8 business days</strong> for our tailors to cut, sew, and quality-check your custom pet jersey before it is ready for dispatch.</p>
-          </section>
-
-          <section className="space-y-3">
-            <h3 className="font-black text-slate-900 uppercase tracking-widest text-xs flex items-center gap-2">
-              <div className="w-1.5 h-1.5 bg-blue-600 rounded-full" /> 03. International Shipping (USA)
-            </h3>
-            <p>All orders are shipped via <strong>FedEx International Express</strong> from Santiago, Chile. Once dispatched, delivery to the USA typically takes <strong>4 to 5 business days</strong>. You will receive a tracking number via email as soon as your order leaves our facility.</p>
-          </section>
-
-          <section className="space-y-3">
-            <h3 className="font-black text-slate-900 uppercase tracking-widest text-xs flex items-center gap-2">
-              <div className="w-1.5 h-1.5 bg-blue-600 rounded-full" /> 04. Customs & Duties
-            </h3>
-            <p>While we handle the shipping and export process, 4PUPPIES.CL is not responsible for any additional customs duties, taxes, or import fees that may be applied by your country's authorities upon arrival.</p>
-          </section>
-
-          <section className="space-y-3 p-6 bg-blue-50 rounded-2xl border border-blue-100 italic">
-            <p className="text-xs font-bold text-blue-800">Note: By completing your purchase, you agree to these terms and confirm that you have checked our Size Guide to ensure a perfect fit for your pet.</p>
-          </section>
+        <div className="p-6 md:p-8 overflow-y-auto space-y-6 text-sm text-gray-600 leading-relaxed custom-scrollbar">
+          {current.sections.map((sec) => (
+            <section key={sec.id} className="space-y-2">
+              <h3 className="font-black text-slate-900 uppercase tracking-widest text-[11px] flex items-center gap-2">
+                <span className="text-blue-600">{sec.id}.</span> {sec.title}
+              </h3>
+              {sec.text && <p className="pl-6">{sec.text}</p>}
+              {sec.list && (
+                <ul className="pl-6 space-y-2 list-disc list-outside text-gray-500">
+                  {sec.list.map((item, idx) => <li key={idx}>{item}</li>)}
+                </ul>
+              )}
+            </section>
+          ))}
+          
+          <div className="p-5 bg-blue-50 rounded-2xl border border-blue-100 italic flex gap-4">
+             <Info className="flex-shrink-0 text-blue-600" size={20} />
+             <p className="text-[11px] font-bold text-blue-800">
+               {lang === 'en' 
+                 ? "By purchasing, you agree to these terms and confirm you have checked our Size Guide."
+                 : "Al comprar, usted acepta estos términos y confirma que ha revisado nuestra Guía de Tallas."
+               }
+             </p>
+          </div>
         </div>
 
-        <div className="p-6 bg-slate-50 border-t border-gray-100">
-          <button onClick={onClose} className="w-full bg-slate-900 text-white font-black py-4 rounded-xl uppercase tracking-widest text-xs hover:bg-black transition-all">
-            Understood
+        <div className="p-6 bg-slate-50 border-t border-gray-100 flex gap-4">
+          <button onClick={onClose} className="w-full bg-slate-900 text-white font-black py-4 rounded-2xl uppercase tracking-widest text-xs hover:bg-black transition-all shadow-lg active:scale-[0.98]">
+            {current.button}
           </button>
         </div>
       </div>
@@ -175,13 +270,14 @@ const TermsModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void 
   );
 };
 
-const CheckoutModal = ({ isOpen, onClose, product, orderDetails }: { isOpen: boolean, onClose: () => void, product: any, orderDetails: any }) => {
+const CheckoutModal = ({ isOpen, onClose, product, orderDetails, onOpenTerms }: { isOpen: boolean, onClose: () => void, product: any, orderDetails: any, onOpenTerms: () => void }) => {
   const [formData, setFormData] = useState({
     customerName: '',
     address: '',
     email: '',
     phone: ''
   });
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!isOpen) return null;
@@ -273,7 +369,18 @@ const CheckoutModal = ({ isOpen, onClose, product, orderDetails }: { isOpen: boo
             </div>
           </div>
 
-          <button disabled={isSubmitting} type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-2xl shadow-xl shadow-blue-100 transition-all active:scale-[0.98] uppercase tracking-[0.1em] text-sm flex items-center justify-center gap-2">
+          <div className="flex items-start gap-3 p-2 group cursor-pointer" onClick={() => setAgreedToTerms(!agreedToTerms)}>
+            <div className={`mt-1 flex-shrink-0 w-5 h-5 rounded-md border-2 transition-all flex items-center justify-center ${agreedToTerms ? 'bg-blue-600 border-blue-600' : 'border-gray-200 group-hover:border-blue-400'}`}>
+              {agreedToTerms && <Check size={14} className="text-white" strokeWidth={4} />}
+            </div>
+            <p className="text-[10px] font-bold text-gray-500 leading-tight">
+              I have read and agree to the <button type="button" onClick={(e) => { e.stopPropagation(); onOpenTerms(); }} className="text-blue-600 underline font-black">International Shipping & Store Policies</button>.
+            </p>
+          </div>
+
+          <button disabled={isSubmitting || !agreedToTerms} type="submit" className={`w-full font-black py-4 rounded-2xl shadow-xl transition-all active:scale-[0.98] uppercase tracking-[0.1em] text-sm flex items-center justify-center gap-2 ${
+            agreedToTerms && !isSubmitting ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-100' : 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-none'
+          }`}>
             {isSubmitting ? 'Connecting...' : 'Secure Checkout with Card'} <ShieldCheck size={18} strokeWidth={3} />
           </button>
         </form>
@@ -780,7 +887,15 @@ export default function App() {
         </div>
       </footer>
       <SizeGuideModal isOpen={sizeModalOpen} onClose={() => setSizeModalOpen(false)} />
-      {selectedProduct && <CheckoutModal isOpen={checkoutModalOpen} onClose={() => setCheckoutModalOpen(false)} product={selectedProduct} orderDetails={orderDetails} />}
+      {selectedProduct && (
+        <CheckoutModal 
+          isOpen={checkoutModalOpen} 
+          onClose={() => setCheckoutModalOpen(false)} 
+          product={selectedProduct} 
+          orderDetails={orderDetails} 
+          onOpenTerms={() => setTermsModalOpen(true)}
+        />
+      )}
       <ReviewModal isOpen={reviewModalOpen} onClose={() => setReviewModalOpen(false)} onRefresh={fetchReviews} />
       <AllReviewsModal isOpen={allReviewsOpen} onClose={() => setAllReviewsOpen(false)} reviews={reviews} onZoom={setFullscreenImage} />
       <TermsModal isOpen={termsModalOpen} onClose={() => setTermsModalOpen(false)} />
