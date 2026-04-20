@@ -14,7 +14,8 @@ import {
   MessageSquare,
   Star,
   Upload,
-  Search
+  Search,
+  FileText
 } from 'lucide-react';
 
 const PRICING_TABLE: Record<string, number> = {
@@ -108,6 +109,66 @@ const SizeGuideModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => v
         <div className="flex gap-3 p-4 bg-yellow-50 rounded-2xl border border-yellow-100">
           <Info size={20} className="text-yellow-600 flex-shrink-0" />
           <p className="text-[10px] text-yellow-800 font-bold uppercase italic leading-tight">If between sizes, choose the larger one. You can select the extra length in the "Size & Length" dropdown on each product. Handmade in 8 business days once ordered.</p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const TermsModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) => {
+  if (!isOpen) return null;
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+      <div className="bg-white rounded-[2.5rem] max-w-2xl w-full max-h-[80vh] overflow-hidden shadow-2xl relative flex flex-col">
+        <div className="p-8 md:p-10 border-b border-gray-100 flex justify-between items-center bg-slate-50">
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-blue-100 rounded-2xl text-blue-600"><FileText size={24} /></div>
+            <div>
+              <h2 className="text-2xl font-black uppercase tracking-tight leading-none">Terms & Shipping</h2>
+              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">Legal Policy & Processing Times</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-2 hover:bg-gray-200 rounded-full transition-colors"><X size={24} /></button>
+        </div>
+        
+        <div className="p-8 md:p-10 overflow-y-auto space-y-8 text-sm text-gray-600 leading-relaxed custom-scrollbar">
+          <section className="space-y-3">
+            <h3 className="font-black text-slate-900 uppercase tracking-widest text-xs flex items-center gap-2">
+              <div className="w-1.5 h-1.5 bg-blue-600 rounded-full" /> 01. Custom Orders Policy
+            </h3>
+            <p>Each jersey at <strong>4PUPPIES.CL</strong> is handmade and custom-tailored to your pet's measurements and selected number/name. Due to the highly personalized nature of our products, <strong>we do not accept returns or exchanges</strong> unless the product arrives damaged or with a manufacturing defect.</p>
+          </section>
+
+          <section className="space-y-3">
+            <h3 className="font-black text-slate-900 uppercase tracking-widest text-xs flex items-center gap-2">
+              <div className="w-1.5 h-1.5 bg-blue-600 rounded-full" /> 02. Processing & Prep Time
+            </h3>
+            <p>We take pride in our craftsmanship. Please allow <strong>8 business days</strong> for our tailors to cut, sew, and quality-check your custom pet jersey before it is ready for dispatch.</p>
+          </section>
+
+          <section className="space-y-3">
+            <h3 className="font-black text-slate-900 uppercase tracking-widest text-xs flex items-center gap-2">
+              <div className="w-1.5 h-1.5 bg-blue-600 rounded-full" /> 03. International Shipping (USA)
+            </h3>
+            <p>All orders are shipped via <strong>FedEx International Express</strong> from Santiago, Chile. Once dispatched, delivery to the USA typically takes <strong>4 to 5 business days</strong>. You will receive a tracking number via email as soon as your order leaves our facility.</p>
+          </section>
+
+          <section className="space-y-3">
+            <h3 className="font-black text-slate-900 uppercase tracking-widest text-xs flex items-center gap-2">
+              <div className="w-1.5 h-1.5 bg-blue-600 rounded-full" /> 04. Customs & Duties
+            </h3>
+            <p>While we handle the shipping and export process, 4PUPPIES.CL is not responsible for any additional customs duties, taxes, or import fees that may be applied by your country's authorities upon arrival.</p>
+          </section>
+
+          <section className="space-y-3 p-6 bg-blue-50 rounded-2xl border border-blue-100 italic">
+            <p className="text-xs font-bold text-blue-800">Note: By completing your purchase, you agree to these terms and confirm that you have checked our Size Guide to ensure a perfect fit for your pet.</p>
+          </section>
+        </div>
+
+        <div className="p-6 bg-slate-50 border-t border-gray-100">
+          <button onClick={onClose} className="w-full bg-slate-900 text-white font-black py-4 rounded-xl uppercase tracking-widest text-xs hover:bg-black transition-all">
+            Understood
+          </button>
         </div>
       </div>
     </div>
@@ -504,6 +565,7 @@ export default function App() {
   const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
   const [allReviewsOpen, setAllReviewsOpen] = useState(false);
+  const [termsModalOpen, setTermsModalOpen] = useState(false);
   const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [orderDetails, setOrderDetails] = useState<any>(null);
@@ -707,7 +769,13 @@ export default function App() {
             <span>© 2026 4PUPPIES.CL</span>
             <span>SANTIAGO, CHILE</span>
             <span>EXPRESS DELIVERY TO USA</span>
-            <span className="mt-2 text-[9px] opacity-70">NOT AFFILIATED WITH FIFA. ALL DESIGNS ARE CUSTOM FAN ART.</span>
+            <button 
+              onClick={() => setTermsModalOpen(true)}
+              className="mt-4 text-blue-600 hover:text-blue-700 underline font-black transition-colors"
+            >
+              TERMS & CONDITIONS • SHIPPING POLICY
+            </button>
+            <span className="mt-4 text-[9px] opacity-70">NOT AFFILIATED WITH FIFA. ALL DESIGNS ARE CUSTOM FAN ART.</span>
           </p>
         </div>
       </footer>
@@ -715,6 +783,7 @@ export default function App() {
       {selectedProduct && <CheckoutModal isOpen={checkoutModalOpen} onClose={() => setCheckoutModalOpen(false)} product={selectedProduct} orderDetails={orderDetails} />}
       <ReviewModal isOpen={reviewModalOpen} onClose={() => setReviewModalOpen(false)} onRefresh={fetchReviews} />
       <AllReviewsModal isOpen={allReviewsOpen} onClose={() => setAllReviewsOpen(false)} reviews={reviews} onZoom={setFullscreenImage} />
+      <TermsModal isOpen={termsModalOpen} onClose={() => setTermsModalOpen(false)} />
       <FullscreenImageModal imageUrl={fullscreenImage} onClose={() => setFullscreenImage(null)} />
     </div>
   );
