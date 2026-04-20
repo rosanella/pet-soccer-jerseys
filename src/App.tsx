@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 
 const PRICING_TABLE: Record<string, number> = {
-  "XS": 68, "XS+2\"": 69, "XS+4\"": 70,
+  "XS": 3, "XS+2\"": 4, "XS+4\"": 5,
   "S": 70, "S+2\"": 71, "S+4\"": 72,
   "M": 72, "M+2\"": 72, "M+4\"": 73,
   "L": 73, "L+2\"": 74, "L+4\"": 75,
