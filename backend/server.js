@@ -4,7 +4,7 @@ const cloudinary = require('cloudinary').v2;
 const multer = require('multer');
 const { Pool } = require('pg');
 const path = require('path');
-const { Resend } = require('resend');
+const nodemailer = require('nodemailer');
 require('dotenv').config();
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
@@ -38,8 +38,8 @@ app.post('/api/webhook', express.raw({ type: 'application/json' }), async (req, 
       const order = result.rows[0];
 
       // 2. Send Confirmation Email to CUSTOMER
-      await resend.emails.send({
-        from: '4PUPPIES.CL <sales@4puppies.cl>',
+      await transporter.sendMail({
+        from: '"4PUPPIES.CL" <sales@4puppies.cl>',
         to: order.email,
         subject: `Order Confirmed! 🐾 Jersey for ${order.pet_name} is in production`,
         html: `
@@ -72,8 +72,8 @@ app.post('/api/webhook', express.raw({ type: 'application/json' }), async (req, 
       });
 
       // 3. Send Notification to OWNER (Internal)
-      await resend.emails.send({
-        from: '4PUPPIES.CL <sales@4puppies.cl>',
+      await transporter.sendMail({
+        from: '"4PUPPIES.CL" <sales@4puppies.cl>',
         to: 'sales@4puppies.cl',
         subject: `NEW SALE! $${order.total} - ${order.customer_name}`,
         html: `<p>New order #${order.id} from ${order.email}. Check Admin Panel for details.</p>`
@@ -108,8 +108,15 @@ const pool = new Pool({
   }
 });
 
-// Email engine (Resend)
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Configure Nodemailer with Brevo (Sendinblue) SMTP
+const transporter = nodemailer.createTransport({
+  host: 'smtp-relay.brevo.com',
+  port: 587,
+  auth: {
+    user: process.env.BREVO_SMTP_USER || 'ventas@4puppies.cl',
+    pass: process.env.BREVO_SMTP_PASS
+  }
+});
 
 // Create tables if not exists
 const initDb = async () => {
