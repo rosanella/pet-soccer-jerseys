@@ -10,6 +10,83 @@ const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 const app = express();
 app.use(cors());
+
+// Stripe Webhook MUST be before express.json() to get raw body
+app.post('/api/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+  const sig = req.headers['stripe-signature'];
+  const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+  let event;
+  try {
+    event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
+  } catch (err) {
+    console.error(`Webhook Error: ${err.message}`);
+    return res.status(400).send(`Webhook Error: ${err.message}`);
+  }
+
+  if (event.type === 'checkout.session.completed') {
+    const session = event.data.object;
+    const orderId = session.metadata.orderId;
+
+    try {
+      // 1. Update Order Status to Paid
+      const result = await pool.query(
+        'UPDATE orders SET status = $1 WHERE id = $2 RETURNING *',
+        ['paid', orderId]
+      );
+      
+      const order = result.rows[0];
+
+      // 2. Send Confirmation Email to CUSTOMER
+      await resend.emails.send({
+        from: '4PUPPIES.CL <sales@4puppies.cl>',
+        to: order.email,
+        subject: `Order Confirmed! 🐾 Jersey for ${order.pet_name} is in production`,
+        html: `
+          <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 20px;">
+            <h1 style="color: #2563eb; text-transform: uppercase;">Thank you for your order! 🐾</h1>
+            <p>Hi ${order.customer_name},</p>
+            <p>We've received your payment and our tailor is starting to work on your custom pet jersey.</p>
+            
+            <div style="background: #f8fafc; padding: 20px; border-radius: 15px; margin: 20px 0;">
+              <h3 style="margin-top: 0; color: #2563eb;">Order Summary:</h3>
+              <p><b>Product:</b> ${order.product_name} (${order.size_key})</p>
+              <p><b>Pet:</b> ${order.pet_name} (#${order.pet_number})</p>
+              <p><b>Delivery Address:</b><br/>
+                ${order.address}<br/>
+                ${order.city}, ${order.region} ${order.zipcode}<br/>
+                <b>${order.country}</b>
+              </p>
+            </div>
+
+            <p style="background: #fffbeb; border: 1px solid #fef3c7; padding: 15px; border-radius: 10px; font-size: 13px; color: #92400e;">
+              <b>Mistake in the info?</b> Please reply to this email or send us a <a href="https://wa.me/56965033785">WhatsApp message</a> immediately to correct it before production progresses.
+            </p>
+
+            <p><b>Next Step:</b> Preparation takes 8-10 business days. As soon as it's finished, you'll receive another email with your FedEx tracking number.</p>
+            
+            <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
+            <p style="font-size: 11px; color: #94a3b8; text-align: center;">4PUPPIES.CL • WORLD CUP PET JERSEYS</p>
+          </div>
+        `
+      });
+
+      // 3. Send Notification to OWNER (Internal)
+      await resend.emails.send({
+        from: '4PUPPIES.CL <sales@4puppies.cl>',
+        to: 'sales@4puppies.cl',
+        subject: `NEW SALE! $${order.total} - ${order.customer_name}`,
+        html: `<p>New order #${order.id} from ${order.email}. Check Admin Panel for details.</p>`
+      });
+
+    } catch (err) {
+      console.error('Order fulfillment error:', err);
+    }
+  }
+
+  res.json({ received: true });
+});
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -233,83 +310,7 @@ app.post('/api/create-checkout-session', async (req, res) => {
     console.error('Stripe Session Error:', error);
     res.status(500).json({ error: error.message });
   }
-});
-
-// Stripe Webhook (Handle successful payments)
-app.post('/api/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
-  const sig = req.headers['stripe-signature'];
-  const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
-
-  let event;
-
-  try {
-    event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
-  } catch (err) {
-    console.error(`Webhook Error: ${err.message}`);
-    return res.status(400).send(`Webhook Error: ${err.message}`);
-  }
-
-  if (event.type === 'checkout.session.completed') {
-    const session = event.data.object;
-    const orderId = session.metadata.orderId;
-
-    try {
-      // 1. Update Order Status to Paid
-      const result = await pool.query(
-        'UPDATE orders SET status = $1 WHERE id = $2 RETURNING *',
-        ['paid', orderId]
-      );
-      
-      const order = result.rows[0];
-
-      // 2. Send Confirmation Email to CUSTOMER
-      await resend.emails.send({
-        from: '4PUPPIES.CL <sales@4puppies.cl>',
-        to: order.email,
-        subject: `Order Confirmed! 🐾 Jersey for ${order.pet_name} is in production`,
-        html: `
-          <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 20px;">
-            <h1 style="color: #2563eb; text-transform: uppercase;">Thank you for your order! 🐾</h1>
-            <p>Hi ${order.customer_name},</p>
-            <p>We've received your payment and our tailor is starting to work on your custom pet jersey.</p>
-            
-            <div style="background: #f8fafc; padding: 20px; border-radius: 15px; margin: 20px 0;">
-              <h3 style="margin-top: 0; color: #2563eb;">Order Summary:</h3>
-              <p><b>Product:</b> ${order.product_name} (${order.size_key})</p>
-              <p><b>Pet:</b> ${order.pet_name} (#${order.pet_number})</p>
-              <p><b>Delivery Address:</b><br/>
-                ${order.address}<br/>
-                ${order.city}, ${order.region} ${order.zipcode}<br/>
-                <b>${order.country}</b>
-              </p>
-            </div>
-
-            <p style="background: #fffbeb; border: 1px solid #fef3c7; padding: 15px; border-radius: 10px; font-size: 13px; color: #92400e;">
-              <b>Mistake in the info?</b> Please reply to this email or send us a <a href="https://wa.me/56965033785">WhatsApp message</a> immediately to correct it before production progresses.
-            </p>
-
-            <p><b>Next Step:</b> Preparation takes 8-10 business days. As soon as it's finished, you'll receive another email with your FedEx tracking number.</p>
-            
-            <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
-            <p style="font-size: 11px; color: #94a3b8; text-align: center;">4PUPPIES.CL • WORLD CUP PET JERSEYS</p>
-          </div>
-        `
-      });
-
-      // 3. Send Notification to OWNER (Internal)
-      await resend.emails.send({
-        from: '4PUPPIES.CL <sales@4puppies.cl>',
-        to: 'sales@4puppies.cl',
-        subject: `NEW SALE! $${order.total} - ${order.customer_name}`,
-        html: `<p>New order #${order.id} from ${order.email}. Check Admin Panel for details.</p>`
-      });
-
-    } catch (err) {
-      console.error('Order fulfillment error:', err);
-    }
-  }
-
-  res.json({ received: true });
+});e });
 });
 
 // Reviews Endpoints
