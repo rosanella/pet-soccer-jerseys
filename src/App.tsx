@@ -631,6 +631,7 @@ const AllReviewsModal = ({ isOpen, onClose, reviews, onZoom }: { isOpen: boolean
 const AdminOrders = ({ onBack }: { onBack: () => void }) => {
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<'paid' | 'shipped' | 'abandoned'>('paid');
   const [trackingInputs, setTrackingInputs] = useState<Record<number, string>>({});
 
   const fetchOrders = async () => {
@@ -671,25 +672,60 @@ const AdminOrders = ({ onBack }: { onBack: () => void }) => {
   return (
     <div className="min-h-screen bg-slate-50 p-6">
       <div className="max-w-6xl mx-auto space-y-8">
-        <div className="flex justify-between items-center bg-white p-6 rounded-[2rem] shadow-sm">
+        <div className="flex flex-col md:flex-row justify-between items-center bg-white p-6 rounded-[2rem] shadow-sm gap-4">
           <div>
             <h1 className="text-3xl font-black uppercase tracking-tighter flex items-center gap-3">
               <Truck className="text-blue-600" size={32} /> Order <span className="text-blue-600">Fulfillment</span>
             </h1>
             <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Manage sales & FedEx tracking</p>
           </div>
+          
+          <div className="flex bg-slate-100 p-1 rounded-xl">
+            <button 
+              onClick={() => setActiveTab('paid')}
+              className={`px-6 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'paid' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+            >
+              Paid
+            </button>
+            <button 
+              onClick={() => setActiveTab('shipped')}
+              className={`px-6 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'shipped' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+            >
+              Shipped
+            </button>
+            <button 
+              onClick={() => setActiveTab('abandoned')}
+              className={`px-6 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'abandoned' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+            >
+              Abandoned
+            </button>
+          </div>
+
           <button onClick={onBack} className="bg-slate-900 text-white px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all">Back to Site</button>
         </div>
 
         {loading ? <p className="text-center py-20 font-bold text-gray-400">Loading orders...</p> : (
           <div className="grid gap-6">
-            {orders.length === 0 && <p className="text-center py-10 text-gray-400 font-bold">No orders found yet.</p>}
-            {orders.map((order) => (
+            {orders.length === 0 && <p className="text-center py-10 text-gray-400 font-bold">No orders found.</p>}
+            {orders.filter(o => 
+              (activeTab === 'paid' && (o.status === 'paid' || o.status === 'completed')) ||
+              (activeTab === 'shipped' && o.status === 'shipped') ||
+              (activeTab === 'abandoned' && o.status === 'pending')
+            ).length === 0 && !loading && <p className="text-center py-10 text-gray-400 font-bold">No orders in this category.</p>}
+            
+            {orders.filter(o => 
+              (activeTab === 'paid' && (o.status === 'paid' || o.status === 'completed')) ||
+              (activeTab === 'shipped' && o.status === 'shipped') ||
+              (activeTab === 'abandoned' && o.status === 'pending')
+            ).map((order) => (
               <div key={order.id} className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100 flex flex-col lg:flex-row gap-8">
                 <div className="flex-grow space-y-4">
                   <div className="flex justify-between items-start">
                     <div className="space-y-1">
-                      <h4 className="font-black text-slate-900 uppercase text-lg leading-none">{order.customer_name}</h4>
+                      <h4 className="font-black text-slate-900 uppercase text-lg leading-none">
+                        <span className="text-blue-600 mr-2">#{order.id}</span>
+                        {order.customer_name}
+                      </h4>
                       <p className="text-xs font-bold text-blue-600">{order.email} • {order.phone}</p>
                     </div>
                     <div className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${
@@ -717,34 +753,36 @@ const AdminOrders = ({ onBack }: { onBack: () => void }) => {
                   </div>
                 </div>
 
-                <div className="lg:w-80 flex flex-col justify-center gap-4 bg-blue-50/30 p-6 rounded-[2rem] border border-blue-50">
-                  <div className="space-y-1">
-                    <label className="text-[9px] font-black text-blue-600 uppercase tracking-widest ml-1">FedEx Tracking #</label>
-                    <input 
-                      type="text" 
-                      placeholder="Enter Number"
-                      className="w-full bg-white border-2 border-transparent p-3 rounded-xl text-sm font-black focus:border-blue-600 outline-none transition-all"
-                      value={trackingInputs[order.id] || order.tracking_number || ''}
-                      onChange={(e) => setTrackingInputs({...trackingInputs, [order.id]: e.target.value})}
-                    />
-                  </div>
-                  <button 
-                    onClick={() => handleTrack(order.id)}
-                    className="w-full bg-blue-600 text-white font-black py-4 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-lg shadow-blue-100 flex items-center justify-center gap-2"
-                  >
-                    Send Tracking Email <Check size={14} />
-                  </button>
-                  {order.tracking_number && (
-                    <a 
-                      href={`https://www.fedex.com/fedextrack/?trknbr=${order.tracking_number}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-center text-[9px] font-black text-blue-600 uppercase tracking-widest flex items-center justify-center gap-1 hover:underline"
+                {activeTab !== 'abandoned' && (
+                  <div className="lg:w-80 flex flex-col justify-center gap-4 bg-blue-50/30 p-6 rounded-[2rem] border border-blue-50">
+                    <div className="space-y-1">
+                      <label className="text-[9px] font-black text-blue-600 uppercase tracking-widest ml-1">FedEx Tracking #</label>
+                      <input 
+                        type="text" 
+                        placeholder="Enter Number"
+                        className="w-full bg-white border-2 border-transparent p-3 rounded-xl text-sm font-black focus:border-blue-600 outline-none transition-all"
+                        value={trackingInputs[order.id] || order.tracking_number || ''}
+                        onChange={(e) => setTrackingInputs({...trackingInputs, [order.id]: e.target.value})}
+                      />
+                    </div>
+                    <button 
+                      onClick={() => handleTrack(order.id)}
+                      className="w-full bg-blue-600 text-white font-black py-4 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-lg shadow-blue-100 flex items-center justify-center gap-2"
                     >
-                      View on FedEx <ExternalLink size={12} />
-                    </a>
-                  )}
-                </div>
+                      Send Tracking Email <Check size={14} />
+                    </button>
+                    {order.tracking_number && (
+                      <a 
+                        href={`https://www.fedex.com/fedextrack/?trknbr=${order.tracking_number}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-center text-[9px] font-black text-blue-600 uppercase tracking-widest flex items-center justify-center gap-1 hover:underline"
+                      >
+                        View on FedEx <ExternalLink size={12} />
+                      </a>
+                    )}
+                  </div>
+                )}
               </div>
             ))}
           </div>
