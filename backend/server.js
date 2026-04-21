@@ -83,7 +83,7 @@ app.post('/api/webhook', express.raw({ type: 'application/json' }), async (req, 
             <p><strong>Total:</strong> $${order.total} USD</p>
             <p><strong>Product:</strong> ${order.product_name} - ${order.size_key}</p>
             <br/>
-            <p>Go to your <a href="${process.env.FRONTEND_URL || 'https://globalshop.4puppies.cl'}/admin4" style="background:#2563eb; color:white; padding:10px 20px; border-radius:8px; text-decoration:none; font-weight:bold;">Admin Dashboard</a> to process this order.</p>
+            <p>Go to your <a href="${process.env.FRONTEND_URL || 'https://globalshop.4puppies.cl'}/admin-orders" style="background:#2563eb; color:white; padding:10px 20px; border-radius:8px; text-decoration:none; font-weight:bold;">Admin Dashboard</a> to process this order.</p>
           </div>
         `
       });
