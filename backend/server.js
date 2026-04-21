@@ -76,7 +76,16 @@ app.post('/api/webhook', express.raw({ type: 'application/json' }), async (req, 
         from: '4PUPPIES.CL <sales@4puppies.cl>',
         to: 'sales@4puppies.cl',
         subject: `NEW SALE! $${order.total} - ${order.customer_name}`,
-        html: `<p>New order #${order.id} from ${order.email}. Check Admin Panel for details.</p>`
+        html: `
+          <div style="font-family: sans-serif; padding: 20px;">
+            <h2>🎉 New Sale #${order.id}</h2>
+            <p><strong>Customer:</strong> ${order.customer_name} (${order.email})</p>
+            <p><strong>Total:</strong> $${order.total} USD</p>
+            <p><strong>Product:</strong> ${order.product_name} - ${order.size_key}</p>
+            <br/>
+            <p>Go to your <a href="${process.env.FRONTEND_URL || 'https://globalshop.4puppies.cl'}/admin4" style="background:#2563eb; color:white; padding:10px 20px; border-radius:8px; text-decoration:none; font-weight:bold;">Admin Dashboard</a> to process this order.</p>
+          </div>
+        `
       });
 
     } catch (err) {
@@ -154,6 +163,14 @@ const initDb = async () => {
         status TEXT DEFAULT 'pending',
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
+      
+      -- Ensure the sequence starts at 100 if we are just starting out
+      DO $$
+      BEGIN
+        IF (SELECT COUNT(*) FROM orders) < 5 THEN
+          ALTER SEQUENCE orders_id_seq RESTART WITH 100;
+        END IF;
+      END $$;
     `);
     console.log('Database initialized');
     startAbandonedCartCron();
