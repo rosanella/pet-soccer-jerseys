@@ -150,6 +150,7 @@ const initDb = async () => {
       ALTER TABLE orders ADD COLUMN IF NOT EXISTS country TEXT;
       ALTER TABLE orders ADD COLUMN IF NOT EXISTS tracking_number TEXT;
       ALTER TABLE orders ADD COLUMN IF NOT EXISTS shipped_at TIMESTAMP WITH TIME ZONE;
+      ALTER TABLE orders ADD COLUMN IF NOT EXISTS abandoned_email_sent BOOLEAN DEFAULT FALSE;
 
       CREATE TABLE IF NOT EXISTS reviews (
         id SERIAL PRIMARY KEY,
@@ -162,11 +163,54 @@ const initDb = async () => {
       );
     `);
     console.log('Database initialized');
+    startAbandonedCartCron();
   } catch (err) {
     console.error('Error initializing database:', err);
   }
 };
 initDb();
+
+// Automated Abandoned Cart Recovery (Runs every 15 minutes)
+const startAbandonedCartCron = () => {
+  setInterval(async () => {
+    try {
+      const result = await pool.query(
+        "SELECT * FROM orders WHERE status = 'pending' AND abandoned_email_sent = FALSE AND created_at < NOW() - INTERVAL '1 hour' AND created_at > NOW() - INTERVAL '24 hours'"
+      );
+
+      for (const order of result.rows) {
+        await transporter.sendMail({
+          from: '"4PUPPIES.CL" <sales@4puppies.cl>',
+          to: order.email,
+          subject: `Did you forget something, ${order.customer_name}? 🐾`,
+          html: `
+            <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 20px;">
+              <h1 style="color: #2563eb;">We saved your custom jersey! ⚽</h1>
+              <p>Hi ${order.customer_name},</p>
+              <p>We noticed you started designing a beautiful custom jersey for <b>${order.pet_name}</b>, but didn't quite finish checking out.</p>
+              <p>Because we'd love to see ${order.pet_name} rocking their new gear, here is a special <b>5% OFF</b> discount code you can use right now!</p>
+              
+              <div style="background: #f8fafc; padding: 20px; text-align: center; border-radius: 15px; margin: 20px 0;">
+                <p style="margin: 0; font-size: 13px; color: #64748b; text-transform: uppercase; font-weight: bold;">Use Checkout Code:</p>
+                <p style="margin: 5px 0; font-size: 28px; font-weight: 900; color: #2563eb; letter-spacing: 2px;">COMEBACK5</p>
+              </div>
+
+              <a href="${process.env.FRONTEND_URL || 'https://globalshop.4puppies.cl'}" style="display: block; width: 100%; text-align: center; background: #0f172a; color: white; padding: 15px 0; border-radius: 12px; text-decoration: none; font-weight: bold; text-transform: uppercase;">Complete my Order</a>
+              
+              <p style="font-size: 12px; color: #64748b; margin-top: 20px; text-align: center;">If you have any questions or need help with sizing, reply to this email! We are here to help.</p>
+            </div>
+          `
+        });
+
+        // Mark as sent so we don't spam them
+        await pool.query('UPDATE orders SET abandoned_email_sent = TRUE WHERE id = $1', [order.id]);
+        console.log(`Abandoned cart email sent to ${order.email} (Order #${order.id})`);
+      }
+    } catch (error) {
+      console.error('Abandoned cart cron error:', error);
+    }
+  }, 15 * 60 * 1000); // 15 minutes
+};
 
 // Order endpoint
 app.post('/api/orders', async (req, res) => {
