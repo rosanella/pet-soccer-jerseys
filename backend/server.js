@@ -389,7 +389,7 @@ app.delete('/api/reviews/:id', async (req, res) => {
 // Admin Order Management
 app.get('/api/admin/orders', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM orders ORDER BY created_at DESC');
+    const result = await pool.query("SELECT * FROM orders WHERE status != 'pending' ORDER BY created_at DESC");
     res.json(result.rows);
   } catch (error) {
     console.error('Fetch orders error:', error);
