@@ -631,7 +631,7 @@ const AllReviewsModal = ({ isOpen, onClose, reviews, onZoom }: { isOpen: boolean
 const AdminOrders = ({ onBack }: { onBack: () => void }) => {
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'paid' | 'shipped' | 'abandoned'>('paid');
+  const [activeTab, setActiveTab] = useState<'paid' | 'shipped' | 'delivered' | 'abandoned'>('paid');
   const [trackingInputs, setTrackingInputs] = useState<Record<number, string>>({});
 
   const fetchOrders = async () => {
@@ -694,6 +694,12 @@ const AdminOrders = ({ onBack }: { onBack: () => void }) => {
               Shipped
             </button>
             <button 
+              onClick={() => setActiveTab('delivered')}
+              className={`px-6 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'delivered' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+            >
+              Delivered
+            </button>
+            <button 
               onClick={() => setActiveTab('abandoned')}
               className={`px-6 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'abandoned' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
             >
@@ -710,12 +716,14 @@ const AdminOrders = ({ onBack }: { onBack: () => void }) => {
             {orders.filter(o => 
               (activeTab === 'paid' && (o.status === 'paid' || o.status === 'completed')) ||
               (activeTab === 'shipped' && o.status === 'shipped') ||
+              (activeTab === 'delivered' && o.status === 'delivered') ||
               (activeTab === 'abandoned' && o.status === 'pending')
             ).length === 0 && !loading && <p className="text-center py-10 text-gray-400 font-bold">No orders in this category.</p>}
             
             {orders.filter(o => 
               (activeTab === 'paid' && (o.status === 'paid' || o.status === 'completed')) ||
               (activeTab === 'shipped' && o.status === 'shipped') ||
+              (activeTab === 'delivered' && o.status === 'delivered') ||
               (activeTab === 'abandoned' && o.status === 'pending')
             ).map((order) => (
               <div key={order.id} className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100 flex flex-col lg:flex-row gap-8">
@@ -729,7 +737,9 @@ const AdminOrders = ({ onBack }: { onBack: () => void }) => {
                       <p className="text-xs font-bold text-blue-600">{order.email} • {order.phone}</p>
                     </div>
                     <div className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${
-                      order.status === 'shipped' ? 'bg-green-100 text-green-600' : 'bg-orange-100 text-orange-600'
+                      order.status === 'shipped' ? 'bg-green-100 text-green-600' : 
+                      order.status === 'delivered' ? 'bg-blue-100 text-blue-600' :
+                      'bg-orange-100 text-orange-600'
                     }`}>
                       {order.status}
                     </div>
@@ -753,7 +763,7 @@ const AdminOrders = ({ onBack }: { onBack: () => void }) => {
                   </div>
                 </div>
 
-                {activeTab !== 'abandoned' && (
+                {activeTab !== 'abandoned' && activeTab !== 'delivered' && (
                   <div className="lg:w-80 flex flex-col justify-center gap-4 bg-blue-50/30 p-6 rounded-[2rem] border border-blue-50">
                     <div className="space-y-1">
                       <label className="text-[9px] font-black text-blue-600 uppercase tracking-widest ml-1">FedEx Tracking #</label>

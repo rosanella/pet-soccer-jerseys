@@ -152,6 +152,7 @@ const initDb = async () => {
       ALTER TABLE orders ADD COLUMN IF NOT EXISTS country TEXT;
       ALTER TABLE orders ADD COLUMN IF NOT EXISTS tracking_number TEXT;
       ALTER TABLE orders ADD COLUMN IF NOT EXISTS shipped_at TIMESTAMP WITH TIME ZONE;
+      ALTER TABLE orders ADD COLUMN IF NOT EXISTS delivered_at TIMESTAMP WITH TIME ZONE;
       ALTER TABLE orders ADD COLUMN IF NOT EXISTS abandoned_email_sent BOOLEAN DEFAULT FALSE;
 
       CREATE TABLE IF NOT EXISTS reviews (
@@ -174,6 +175,7 @@ const initDb = async () => {
     `);
     console.log('Database initialized');
     startAbandonedCartCron();
+    startEnviaTrackingCron();
   } catch (err) {
     console.error('Error initializing database:', err);
   }
@@ -220,6 +222,68 @@ const startAbandonedCartCron = () => {
       console.error('Abandoned cart cron error:', error);
     }
   }, 15 * 60 * 1000); // 15 minutes
+};
+
+// Envia.com Tracking Supervisor (Runs every 1 hour)
+const startEnviaTrackingCron = () => {
+  if (!process.env.ENVIA_TOKEN) {
+    console.warn('ENVIA_TOKEN not found. Automated tracking disabled.');
+    return;
+  }
+
+  setInterval(async () => {
+    try {
+      console.log('Checking Envia.com for delivered packages...');
+      const result = await pool.query(
+        "SELECT id, tracking_number, email, customer_name FROM orders WHERE status = 'shipped' AND tracking_number IS NOT NULL"
+      );
+
+      for (const order of result.rows) {
+        const response = await fetch('https://api.envia.com/ship/generaltrack/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${process.env.ENVIA_TOKEN}`
+          },
+          body: JSON.stringify({
+            trackingNumbers: [order.tracking_number]
+          })
+        });
+
+        const data = await response.json();
+        
+        // Envia.com returns an array of tracking results
+        const trackInfo = data.data?.[0];
+        
+        if (trackInfo && (trackInfo.status === 'delivered' || trackInfo.status?.toLowerCase() === 'entregado')) {
+          await pool.query(
+            "UPDATE orders SET status = 'delivered', delivered_at = CURRENT_TIMESTAMP WHERE id = $1",
+            [order.id]
+          );
+          console.log(`Order #${order.id} marked as DELIVERED by Envia.com`);
+          
+          // Optional: Send "Order Delivered" email
+          await resend.emails.send({
+            from: '4PUPPIES.CL <sales@4puppies.cl>',
+            to: order.email,
+            subject: `It's here! 🐾 Your 4Puppies order has been delivered`,
+            html: `
+              <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 20px;">
+                <h1 style="color: #22c55e;">Delivered! 🎉</h1>
+                <p>Hi ${order.customer_name},</p>
+                <p>We've been notified that your order <b>#${order.id}</b> has been successfully delivered.</p>
+                <p>We hope you and your pet love the new jersey! If everything is perfect, we'd love it if you could share a photo with us on Instagram <b>@4puppies.cl</b></p>
+                <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
+                <p style="font-size: 11px; color: #94a3b8; text-align: center;">4PUPPIES.CL • PREMIUM PET APPAREL</p>
+              </div>
+            `
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Envia Tracking Cron Error:', error);
+    }
+  }, 60 * 60 * 1000); // 1 hour
 };
 
 // Order endpoint
