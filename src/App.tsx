@@ -82,64 +82,110 @@ const SizeGuideModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => v
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-      <div className="bg-white rounded-[2.5rem] max-w-xl w-full overflow-hidden shadow-2xl relative p-8 md:p-10">
+      <div className="bg-white rounded-[3rem] max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl relative p-8 md:p-12 custom-scrollbar">
         <button onClick={onClose} className="absolute top-6 right-6 p-2 hover:bg-gray-100 rounded-full transition-colors"><X size={24} /></button>
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-blue-100 rounded-2xl text-blue-600"><Ruler size={24} /></div>
+        
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+          <div className="flex items-center gap-4">
+            <div className="p-4 bg-blue-100 rounded-[1.5rem] text-blue-600 shadow-sm"><Ruler size={28} /></div>
             <div>
-              <h2 className="text-2xl font-black uppercase tracking-tight leading-none">Size Guide</h2>
-              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">International Standards</p>
+              <h2 className="text-3xl font-black uppercase tracking-tighter leading-none">{unit === 'inches' ? 'Size Guide' : 'Cuadro de Tallas'}</h2>
+              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-[0.2em] mt-1">{unit === 'inches' ? 'International Standards' : 'Medidas de Referencia'}</p>
             </div>
           </div>
-          <div className="flex bg-slate-100 p-1 rounded-xl">
+          <div className="flex bg-slate-100 p-1.5 rounded-2xl shadow-inner">
             <button 
               onClick={() => setUnit('inches')}
-              className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all ${unit === 'inches' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-400'}`}
+              className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${unit === 'inches' ? 'bg-white text-blue-600 shadow-md transform scale-105' : 'text-slate-400 hover:text-slate-600'}`}
             >
               Inches
             </button>
             <button 
               onClick={() => setUnit('cm')}
-              className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all ${unit === 'cm' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-400'}`}
+              className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${unit === 'cm' ? 'bg-white text-blue-600 shadow-md transform scale-105' : 'text-slate-400 hover:text-slate-600'}`}
             >
               Centimeters
             </button>
           </div>
         </div>
-        <div className="overflow-x-auto border border-gray-100 rounded-2xl">
-          <table className="w-full text-left text-sm md:text-base">
-            <thead>
-              <tr className="bg-blue-600 text-white">
-                <th className="p-4 uppercase text-[10px] font-black">Size</th>
-                <th className="p-4 uppercase text-[10px] font-black">Neck ({unit})</th>
-                <th className="p-4 uppercase text-[10px] font-black">Chest ({unit})</th>
-                <th className="p-4 uppercase text-[10px] font-black">Back ({unit})</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {currentData.map(([sz, n, c, b]) => (
-                <tr key={sz} className="hover:bg-gray-50 transition-colors"><td className="p-4 font-black text-blue-600">{sz}</td><td className="p-4 text-gray-500 font-bold">{n}</td><td className="p-4 text-gray-500 font-bold">{c}</td><td className="p-4 text-gray-500 font-bold">{b}</td></tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <h3 className="text-xs font-bold uppercase text-blue-600 tracking-widest mb-4 mt-4">✨ Custom length options</h3>
-        <div className="grid grid-cols-2 gap-4 mb-6">
-          <div className="p-4 bg-blue-50 rounded-2xl border border-blue-100 text-center">
-            <p className="text-[10px] font-black uppercase text-blue-400 mb-1">{unit === 'inches' ? '+2" Extra Back' : '+5cm Extra Largo'}</p>
-            <p className="text-[10px] text-blue-800 font-bold leading-tight">For extra coverage on longer pets.</p>
+
+        <div className="grid lg:grid-cols-5 gap-8">
+          <div className="lg:col-span-3 space-y-4">
+            <div className="overflow-hidden border border-gray-100 rounded-[2rem] shadow-sm">
+              <table className="w-full text-left text-sm">
+                <thead>
+                  <tr className="bg-blue-600 text-white">
+                    <th className="p-4 uppercase text-[10px] font-black tracking-widest">{unit === 'inches' ? 'Size' : 'Talla'}</th>
+                    <th className="p-4 uppercase text-[10px] font-black tracking-widest">{unit === 'inches' ? 'Neck' : 'Cuello'} ({unit})</th>
+                    <th className="p-4 uppercase text-[10px] font-black tracking-widest">{unit === 'inches' ? 'Chest' : 'Pecho'} ({unit})</th>
+                    <th className="p-4 uppercase text-[10px] font-black tracking-widest">{unit === 'inches' ? 'Back' : 'Largo'} ({unit})</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {currentData.map(([sz, n, c, b]) => (
+                    <tr key={sz} className="hover:bg-blue-50/30 transition-colors"><td className="p-4 font-black text-slate-900">{sz}</td><td className="p-4 text-gray-500 font-bold">{n}</td><td className="p-4 text-gray-500 font-bold">{c}</td><td className="p-4 text-gray-500 font-bold">{b}</td></tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            
+            <div className="p-4 bg-red-50/50 rounded-2xl border border-red-100/50">
+              <p className="text-[9px] font-black text-red-500 uppercase tracking-widest text-center leading-relaxed">
+                {unit === 'inches' 
+                  ? "* If between sizes, choose the larger one. Measurements may vary 0.5-1\"."
+                  : "* Si tu mascota está entre tallas, elige la más grande. Puede haber variaciones de 1 a 2 cm."}
+              </p>
+            </div>
           </div>
-          <div className="p-4 bg-blue-50 rounded-2xl border border-blue-100 text-center">
-            <p className="text-[10px] font-black uppercase text-blue-400 mb-1">{unit === 'inches' ? '+4" Extra Back' : '+10cm Extra Largo'}</p>
-            <p className="text-[10px] text-blue-800 font-bold leading-tight">Max length for breeds like Corgis or Dachshunds.</p>
+
+          <div className="lg:col-span-2 space-y-6">
+            <div className="bg-slate-50 p-6 rounded-[2rem] border border-slate-100 space-y-4">
+              <div className="space-y-3">
+                <h4 className="text-[10px] font-black uppercase text-blue-600 tracking-widest border-b border-blue-100 pb-2 flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 bg-blue-600 rounded-full"></div> 
+                  {unit === 'inches' ? 'Largo / Length' : 'Largo:'}
+                </h4>
+                <p className="text-[11px] font-bold text-slate-600 leading-relaxed">
+                  {unit === 'inches' 
+                    ? "Measure from collar to base of tail. Calculate the garment to be at least 1\" shorter than the pet."
+                    : "Medir del collar a la base de la cola, y calcule que la prenda sea al menos 2 cm más corta que la mascota."}
+                </p>
+              </div>
+
+              <div className="space-y-3">
+                <h4 className="text-[10px] font-black uppercase text-blue-600 tracking-widest border-b border-blue-100 pb-2 flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 bg-blue-600 rounded-full"></div> 
+                  {unit === 'inches' ? 'Pecho / Chest' : 'Pecho:'}
+                </h4>
+                <p className="text-[11px] font-bold text-slate-600 leading-relaxed">
+                  {unit === 'inches' 
+                    ? "Measure the widest part of the chest. The garment should be at least 1\" wider than the pet."
+                    : "Medir contorno del pecho de la parte más ancha, la prenda debe ser al menos 2 o 3 cm más ancho que la mascota."}
+                </p>
+              </div>
+
+              <div className="space-y-3">
+                <h4 className="text-[10px] font-black uppercase text-blue-600 tracking-widest border-b border-blue-100 pb-2 flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 bg-blue-600 rounded-full"></div> 
+                  {unit === 'inches' ? 'Cuello / Neck' : 'Cuello:'}
+                </h4>
+                <p className="text-[11px] font-bold text-slate-600 leading-relaxed">
+                  {unit === 'inches' 
+                    ? "Measure the collar area. The garment's neck can be smaller as it stretches and adjusts."
+                    : "Medir el collar. El cuello de la prenda puede ser más chico que la mascota porque estira y ajusta."}
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-blue-600 p-6 rounded-[2rem] text-white shadow-xl shadow-blue-100">
+               <h4 className="text-[10px] font-black uppercase tracking-[0.2em] mb-2 opacity-80">Custom Options</h4>
+               <p className="text-xs font-black leading-tight italic uppercase tracking-tighter">
+                 {unit === 'inches' 
+                   ? "We offer +2\" or +4\" extra length for Doxies & Corgis!"
+                   : "¡Ofrecemos +5cm o +10cm de largo extra para Salchichas y Corgis!"}
+               </p>
+            </div>
           </div>
-        </div>
-        <div className="flex gap-3 p-4 bg-yellow-50 rounded-2xl border border-yellow-100">
-          <Info size={20} className="text-yellow-600 flex-shrink-0" />
-          <p className="text-[10px] text-yellow-800 font-bold uppercase italic leading-tight">
-            If between sizes, choose the larger one. Actual product measurements may vary by 1-2cm. Handmade in 8 business days once ordered.
-          </p>
         </div>
       </div>
     </div>
