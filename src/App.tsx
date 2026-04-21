@@ -836,9 +836,10 @@ export default function App() {
   const [orderDetails, setOrderDetails] = useState<any>(null);
   const [reviews, setReviews] = useState<any[]>([]);
   const [activeReviewId, setActiveReviewId] = useState<number | null>(null);
-  const [adminView, setAdminView] = useState<'none' | 'reviews' | 'orders'>(
+  const [adminView, setAdminView] = useState<'none' | 'reviews' | 'orders' | 'success'>(
     window.location.pathname === '/admin-reviews' ? 'reviews' : 
-    window.location.pathname === '/admin-orders' ? 'orders' : 'none'
+    window.location.pathname === '/admin-orders' ? 'orders' : 
+    window.location.pathname === '/success' ? 'success' : 'none'
   );
 
   useEffect(() => {
@@ -848,6 +849,7 @@ export default function App() {
       const path = window.location.pathname;
       if (path === '/admin-reviews') setAdminView('reviews');
       else if (path === '/admin-orders') setAdminView('orders');
+      else if (path === '/success') setAdminView('success');
       else setAdminView('none');
     };
     window.addEventListener('popstate', handlePopState);
@@ -858,6 +860,7 @@ export default function App() {
     window.history.pushState({}, '', path);
     if (path === '/admin-reviews') setAdminView('reviews');
     else if (path === '/admin-orders') setAdminView('orders');
+    else if (path === '/success') setAdminView('success');
     else setAdminView('none');
   };
 
@@ -879,6 +882,37 @@ export default function App() {
 
   if (adminView === 'reviews') return <AdminReviews onBack={() => navigateTo('/')} />;
   if (adminView === 'orders') return <AdminOrders onBack={() => navigateTo('/')} />;
+
+  if (adminView === 'success') {
+    return (
+      <div className="min-h-screen bg-[#F9FAFB] flex items-center justify-center p-6">
+        <div className="bg-white max-w-lg w-full rounded-[3rem] shadow-2xl p-10 md:p-14 text-center space-y-6">
+          <div className="mx-auto w-20 h-20 bg-green-100 rounded-full flex items-center justify-center text-green-500 mb-8">
+            <Check size={40} strokeWidth={3} />
+          </div>
+          <h1 className="text-4xl md:text-5xl font-black uppercase tracking-tighter text-slate-900 leading-none">
+            Payment <span className="text-green-500">Successful!</span>
+          </h1>
+          <p className="text-gray-500 font-bold text-lg leading-relaxed">
+            Thank you for your order! 🎉
+          </p>
+          <div className="bg-slate-50 p-6 rounded-2xl border border-gray-100 text-sm text-gray-600 space-y-3">
+            <p>Your payment has been securely processed by Stripe.</p>
+            <p>Our tailors are already reviewing your custom pet details. <b>Production takes 8-10 business days.</b></p>
+          </div>
+          <p className="text-[10px] font-black uppercase tracking-widest text-blue-600 italic">
+            You will receive a confirmation email shortly.
+          </p>
+          <button 
+            onClick={() => navigateTo('/')}
+            className="w-full bg-slate-900 text-white font-black py-4 rounded-2xl uppercase tracking-widest hover:bg-black transition-all shadow-xl mt-4"
+          >
+            Back to Home
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#F9FAFB] font-sans selection:bg-blue-600 selection:text-white">
