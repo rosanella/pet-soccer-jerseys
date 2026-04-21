@@ -310,7 +310,6 @@ app.post('/api/create-checkout-session', async (req, res) => {
     console.error('Stripe Session Error:', error);
     res.status(500).json({ error: error.message });
   }
-});e });
 });
 
 // Reviews Endpoints
