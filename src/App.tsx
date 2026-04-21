@@ -72,44 +72,74 @@ const Header = () => (
 );
 
 const SizeGuideModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) => {
+  const [unit, setUnit] = useState<'inches' | 'cm'>('inches');
   if (!isOpen) return null;
+
+  const INCHES_DATA = [["XS", "8.5\"", "11.5\"", "7.5\""], ["S", "9.5\"", "13.5\"", "8.5\""], ["M", "11\"", "15.5\"", "9.5\""], ["L", "12\"", "17.5\"", "11\""], ["XL", "14\"", "20\"", "13\""], ["2XL", "16\"", "23.5\"", "14.5\""], ["3XL", "19\"", "27.5\"", "16.5\""], ["4XL", "22\"", "31\"", "19\""], ["5XL", "23.5\"", "35\"", "21.5\""]];
+  const CM_DATA = [["XS", "22", "30", "20"], ["S", "25", "35", "22"], ["M", "28", "40", "25"], ["L", "31", "45", "28"], ["XL", "36", "52", "34"], ["2XL", "42", "60", "38"], ["3XL", "49", "70", "43"], ["4XL", "56", "80", "49"], ["5XL", "60", "90", "55"]];
+
+  const currentData = unit === 'inches' ? INCHES_DATA : CM_DATA;
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
       <div className="bg-white rounded-[2.5rem] max-w-xl w-full overflow-hidden shadow-2xl relative p-8 md:p-10">
         <button onClick={onClose} className="absolute top-6 right-6 p-2 hover:bg-gray-100 rounded-full transition-colors"><X size={24} /></button>
-        <div className="flex items-center gap-3 mb-8">
-          <div className="p-3 bg-blue-100 rounded-2xl text-blue-600"><Ruler size={24} /></div>
-          <div>
-            <h2 className="text-2xl font-black uppercase tracking-tight leading-none">Size Guide</h2>
-            <p className="text-xs text-gray-400 font-bold uppercase tracking-widest mt-1">Handmade from Chile • International Standards</p>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-blue-100 rounded-2xl text-blue-600"><Ruler size={24} /></div>
+            <div>
+              <h2 className="text-2xl font-black uppercase tracking-tight leading-none">Size Guide</h2>
+              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">International Standards</p>
+            </div>
+          </div>
+          <div className="flex bg-slate-100 p-1 rounded-xl">
+            <button 
+              onClick={() => setUnit('inches')}
+              className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all ${unit === 'inches' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-400'}`}
+            >
+              Inches
+            </button>
+            <button 
+              onClick={() => setUnit('cm')}
+              className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all ${unit === 'cm' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-400'}`}
+            >
+              Centimeters
+            </button>
           </div>
         </div>
         <div className="overflow-x-auto border border-gray-100 rounded-2xl">
           <table className="w-full text-left text-sm md:text-base">
             <thead>
-              <tr className="bg-blue-600 text-white"><th className="p-4 uppercase text-[10px] font-black">Size</th><th className="p-4 uppercase text-[10px] font-black">Neck</th><th className="p-4 uppercase text-[10px] font-black">Chest</th><th className="p-4 uppercase text-[10px] font-black">Back</th></tr>
+              <tr className="bg-blue-600 text-white">
+                <th className="p-4 uppercase text-[10px] font-black">Size</th>
+                <th className="p-4 uppercase text-[10px] font-black">Neck ({unit})</th>
+                <th className="p-4 uppercase text-[10px] font-black">Chest ({unit})</th>
+                <th className="p-4 uppercase text-[10px] font-black">Back ({unit})</th>
+              </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {[["XS", "8.5\"", "11.5\"", "7.5\""], ["S", "9.5\"", "13.5\"", "8.5\""], ["M", "11\"", "15.5\"", "9.5\""], ["L", "12\"", "17.5\"", "11\""], ["XL", "14\"", "20\"", "13\""], ["2XL", "16\"", "23.5\"", "14.5\""], ["3XL", "19\"", "27.5\"", "16.5\""], ["4XL", "22\"", "31\"", "19\""], ["5XL", "23.5\"", "35\"", "21.5\""]].map(([sz, n, c, b]) => (
+              {currentData.map(([sz, n, c, b]) => (
                 <tr key={sz} className="hover:bg-gray-50 transition-colors"><td className="p-4 font-black text-blue-600">{sz}</td><td className="p-4 text-gray-500 font-bold">{n}</td><td className="p-4 text-gray-500 font-bold">{c}</td><td className="p-4 text-gray-500 font-bold">{b}</td></tr>
               ))}
             </tbody>
           </table>
         </div>
-        <h3 className="text-xs font-bold uppercase text-blue-600 tracking-widest mb-4 mt-2">✨ Custom length options</h3>
+        <h3 className="text-xs font-bold uppercase text-blue-600 tracking-widest mb-4 mt-4">✨ Custom length options</h3>
         <div className="grid grid-cols-2 gap-4 mb-6">
           <div className="p-4 bg-blue-50 rounded-2xl border border-blue-100 text-center">
-            <p className="text-[10px] font-black uppercase text-blue-400 mb-1">+2" Extra Back</p>
+            <p className="text-[10px] font-black uppercase text-blue-400 mb-1">{unit === 'inches' ? '+2" Extra Back' : '+5cm Extra Largo'}</p>
             <p className="text-[10px] text-blue-800 font-bold leading-tight">For extra coverage on longer pets.</p>
           </div>
           <div className="p-4 bg-blue-50 rounded-2xl border border-blue-100 text-center">
-            <p className="text-[10px] font-black uppercase text-blue-400 mb-1">+4" Extra Back</p>
+            <p className="text-[10px] font-black uppercase text-blue-400 mb-1">{unit === 'inches' ? '+4" Extra Back' : '+10cm Extra Largo'}</p>
             <p className="text-[10px] text-blue-800 font-bold leading-tight">Max length for breeds like Corgis or Dachshunds.</p>
           </div>
         </div>
         <div className="flex gap-3 p-4 bg-yellow-50 rounded-2xl border border-yellow-100">
           <Info size={20} className="text-yellow-600 flex-shrink-0" />
-          <p className="text-[10px] text-yellow-800 font-bold uppercase italic leading-tight">If between sizes, choose the larger one. You can select the extra length in the "Size & Length" dropdown on each product. Handmade in 8 business days once ordered.</p>
+          <p className="text-[10px] text-yellow-800 font-bold uppercase italic leading-tight">
+            If between sizes, choose the larger one. Actual product measurements may vary by 1-2cm. Handmade in 8 business days once ordered.
+          </p>
         </div>
       </div>
     </div>
