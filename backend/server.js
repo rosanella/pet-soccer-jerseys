@@ -182,8 +182,14 @@ app.post('/api/create-checkout-session', async (req, res) => {
     const orderId = orderResult.rows[0].id;
 
     // 2. Create Stripe Session with Breakdown
-    const shippingCost = 25; // Define fixed shipping cost (USD)
-    const itemPrice = orderDetails.price - shippingCost;
+    let shippingCost = 25; // Define fixed shipping cost (USD)
+    let itemPrice = orderDetails.price - shippingCost;
+
+    // Prevent negative item price in Stripe for tests or heavy discounts
+    if (itemPrice <= 0) {
+      shippingCost = 0;
+      itemPrice = orderDetails.price;
+    }
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
