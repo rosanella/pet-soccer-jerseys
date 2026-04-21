@@ -552,7 +552,7 @@ app.post('/api/admin/create-manual-order', async (req, res) => {
       paymentUrl = session.url;
     } else {
       // PayPal Link
-      const business = process.env.PAYPAL_BUSINESS_EMAIL || 'sales@4puppies.cl';
+      const business = process.env.PAYPAL_BUSINESS_EMAIL || 'rosanella.galindo@gmail.com';
       paymentUrl = `https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=${encodeURIComponent(business)}&item_name=${encodeURIComponent(productName)}&amount=${total}&currency_code=USD&custom=${orderId}&return=${encodeURIComponent('https://globalshop.4puppies.cl/success')}`;
     }
 

@@ -104,7 +104,7 @@ const SizeGuideModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => v
               onClick={() => setUnit('cm')}
               className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${unit === 'cm' ? 'bg-white text-blue-600 shadow-md transform scale-105' : 'text-slate-400 hover:text-slate-600'}`}
             >
-              Centimeters
+              {unit === 'inches' ? 'Centimeters' : 'Centímetros'}
             </button>
           </div>
         </div>
@@ -178,7 +178,7 @@ const SizeGuideModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => v
             </div>
 
             <div className="bg-blue-600 p-6 rounded-[2rem] text-white shadow-xl shadow-blue-100">
-               <h4 className="text-[10px] font-black uppercase tracking-[0.2em] mb-2 opacity-80">Custom Options</h4>
+               <h4 className="text-[10px] font-black uppercase tracking-[0.2em] mb-2 opacity-80">{unit === 'inches' ? 'Custom Options' : 'Opciones de Largo'}</h4>
                <p className="text-xs font-black leading-tight italic uppercase tracking-tighter">
                  {unit === 'inches' 
                    ? "We offer +2\" or +4\" extra length for Doxies & Corgis!"
