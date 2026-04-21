@@ -628,11 +628,140 @@ const AllReviewsModal = ({ isOpen, onClose, reviews, onZoom }: { isOpen: boolean
   );
 };
 
+const ManualOrderModal = ({ isOpen, onClose, onRefresh }: { isOpen: boolean, onClose: () => void, onRefresh: () => void }) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [paymentLink, setPaymentLink] = useState('');
+  const [formData, setFormData] = useState({
+    customerName: '', email: '', phone: '', address: '', city: '', region: '', zipcode: '', country: '',
+    productName: '', petName: '', petNumber: '', sizeKey: '', total: '', paymentMethod: 'stripe'
+  });
+
+  if (!isOpen) return null;
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setPaymentLink('');
+    try {
+      const resp = await fetch('/api/admin/create-manual-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      });
+      const data = await resp.json();
+      if (data.success) {
+        setPaymentLink(data.paymentUrl);
+        onRefresh();
+      }
+    } catch (err) {
+      alert("Error creating order");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+      <div className="bg-white rounded-[2.5rem] max-w-2xl w-full max-h-[90vh] overflow-y-auto p-8 shadow-2xl relative">
+        <button onClick={onClose} className="absolute top-6 right-6 p-2 hover:bg-slate-100 rounded-full transition-all text-slate-400"><X size={24} /></button>
+        <h2 className="text-2xl font-black uppercase tracking-tighter mb-6 flex items-center gap-2">
+          <FileText className="text-blue-600" /> Create <span className="text-blue-600">Manual Order</span>
+        </h2>
+        
+        {paymentLink ? (
+          <div className="bg-green-50 p-8 rounded-3xl border border-green-100 text-center space-y-4 animate-in zoom-in-95 duration-300">
+            <div className="w-16 h-16 bg-green-500 text-white rounded-full flex items-center justify-center mx-auto shadow-lg"><Check size={32} strokeWidth={3} /></div>
+            <h3 className="text-xl font-black text-green-800 uppercase tracking-tighter">Order Created!</h3>
+            <p className="text-sm font-bold text-green-700">Copy the link below and send it to your customer:</p>
+            <div className="flex gap-2">
+              <input readOnly value={paymentLink} className="flex-grow bg-white border border-green-200 p-4 rounded-xl text-xs font-mono font-bold" />
+              <button 
+                onClick={() => { navigator.clipboard.writeText(paymentLink); alert("Link copied! 📋"); }}
+                className="bg-green-600 text-white px-6 rounded-xl font-black uppercase text-[10px] tracking-widest hover:bg-green-700"
+              >
+                Copy
+              </button>
+            </div>
+            <button onClick={onClose} className="text-xs font-black uppercase tracking-widest text-green-700/50 hover:text-green-700 underline pt-4">Close and go back</button>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Customer Name</label>
+                <input required type="text" className="w-full bg-slate-50 border-2 border-transparent p-3 rounded-xl text-sm font-bold focus:bg-white focus:border-blue-600 outline-none" 
+                  value={formData.customerName} onChange={e => setFormData({...formData, customerName: e.target.value})} />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Email</label>
+                <input required type="email" className="w-full bg-slate-50 border-2 border-transparent p-3 rounded-xl text-sm font-bold focus:bg-white focus:border-blue-600 outline-none" 
+                  value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} />
+              </div>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-4">
+              <div className="space-y-1 col-span-2">
+                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Address</label>
+                <input required type="text" className="w-full bg-slate-50 border-2 border-transparent p-3 rounded-xl text-sm font-bold focus:bg-white focus:border-blue-600 outline-none" 
+                  value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Country</label>
+                <input required type="text" className="w-full bg-slate-50 border-2 border-transparent p-3 rounded-xl text-sm font-bold focus:bg-white focus:border-blue-600 outline-none" 
+                  value={formData.country} onChange={e => setFormData({...formData, country: e.target.value})} />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="space-y-1">
+                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Product</label>
+                <input required placeholder="Custom Jersey" type="text" className="w-full bg-slate-50 border-2 border-transparent p-3 rounded-xl text-sm font-bold focus:bg-white focus:border-blue-600 outline-none" 
+                  value={formData.productName} onChange={e => setFormData({...formData, productName: e.target.value})} />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Pet Details</label>
+                <input required placeholder="Bruno #10" type="text" className="w-full bg-slate-50 border-2 border-transparent p-3 rounded-xl text-sm font-bold focus:bg-white focus:border-blue-600 outline-none" 
+                  value={formData.petName} onChange={e => setFormData({...formData, petName: e.target.value})} />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Price (USD)</label>
+                <input required type="number" className="w-full bg-slate-50 border-2 border-transparent p-3 rounded-xl text-sm font-black text-blue-600 focus:bg-white focus:border-blue-600 outline-none" 
+                  value={formData.total} onChange={e => setFormData({...formData, total: e.target.value})} />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Size</label>
+                <input required placeholder="M" type="text" className="w-full bg-slate-50 border-2 border-transparent p-3 rounded-xl text-sm font-bold focus:bg-white focus:border-blue-600 outline-none" 
+                  value={formData.sizeKey} onChange={e => setFormData({...formData, sizeKey: e.target.value})} />
+              </div>
+            </div>
+
+            <div className="flex gap-4 p-5 bg-slate-50 rounded-2xl border border-slate-100">
+               <label className="flex items-center gap-2 cursor-pointer group">
+                 <input type="radio" name="pay" value="stripe" checked={formData.paymentMethod === 'stripe'} onChange={e => setFormData({...formData, paymentMethod: e.target.value})} className="accent-blue-600 h-4 w-4" />
+                 <span className="text-[10px] font-black uppercase tracking-widest group-hover:text-blue-600 transition-all">Stripe Link</span>
+               </label>
+               <label className="flex items-center gap-2 cursor-pointer group">
+                 <input type="radio" name="pay" value="paypal" checked={formData.paymentMethod === 'paypal'} onChange={e => setFormData({...formData, paymentMethod: e.target.value})} className="accent-blue-600 h-4 w-4" />
+                 <span className="text-[10px] font-black uppercase tracking-widest group-hover:text-blue-600 transition-all">PayPal Link</span>
+               </label>
+            </div>
+
+            <button disabled={isSubmitting} type="submit" className="w-full bg-blue-600 text-white font-black py-5 rounded-2xl uppercase tracking-widest text-xs hover:bg-blue-700 transition-all shadow-xl shadow-blue-100 flex items-center justify-center gap-3 active:scale-[0.98]">
+              {isSubmitting ? 'Generating Payment Link...' : 'Generate and Create Order'} <ChevronRight size={18} />
+            </button>
+          </form>
+        )}
+      </div>
+    </div>
+  );
+};
+
 const AdminOrders = ({ onBack }: { onBack: () => void }) => {
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'paid' | 'shipped' | 'delivered' | 'abandoned'>('paid');
   const [trackingInputs, setTrackingInputs] = useState<Record<number, string>>({});
+  const [manualOrderOpen, setManualOrderOpen] = useState(false);
 
   const fetchOrders = async () => {
     try {
@@ -707,8 +836,15 @@ const AdminOrders = ({ onBack }: { onBack: () => void }) => {
             </button>
           </div>
 
-          <button onClick={onBack} className="bg-slate-900 text-white px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all">Back to Site</button>
+          <div className="flex gap-4">
+            <button onClick={() => setManualOrderOpen(true)} className="bg-blue-600 text-white px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all flex items-center gap-2">
+              <FileText size={14} /> Custom Sale
+            </button>
+            <button onClick={onBack} className="bg-slate-900 text-white px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all">Back to Site</button>
+          </div>
         </div>
+
+        <ManualOrderModal isOpen={manualOrderOpen} onClose={() => setManualOrderOpen(false)} onRefresh={fetchOrders} />
 
         {loading ? <p className="text-center py-20 font-bold text-gray-400">Loading orders...</p> : (
           <div className="grid gap-6">

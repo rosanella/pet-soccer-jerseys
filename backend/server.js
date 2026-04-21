@@ -515,6 +515,54 @@ app.get('/api/admin/orders', async (req, res) => {
   }
 });
 
+app.post('/api/admin/create-manual-order', async (req, res) => {
+  const { 
+    customerName, email, phone, address, city, region, zipcode, country, 
+    productName, petName, petNumber, sizeKey, total, paymentMethod 
+  } = req.body;
+
+  try {
+    const result = await pool.query(
+      `INSERT INTO orders 
+      (customer_name, email, phone, address, city, region, zipcode, country, product_name, pet_name, pet_number, size_key, total, status) 
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING id`,
+      [customerName, email, phone, address, city, region, zipcode, country, productName, petName, petNumber, sizeKey, total, 'pending']
+    );
+    const orderId = result.rows[0].id;
+    let paymentUrl = '';
+
+    if (paymentMethod === 'stripe') {
+      const session = await stripe.checkout.sessions.create({
+        payment_method_types: ['card'],
+        line_items: [{
+          price_data: {
+            currency: 'usd',
+            product_data: { name: productName },
+            unit_amount: Math.round(total * 100),
+          },
+          quantity: 1,
+        }],
+        mode: 'payment',
+        success_url: `${process.env.FRONTEND_URL || 'https://globalshop.4puppies.cl'}/success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${process.env.FRONTEND_URL || 'https://globalshop.4puppies.cl'}/admin-orders`,
+        customer_email: email,
+        client_reference_id: orderId.toString(),
+        metadata: { orderId: orderId.toString() }
+      });
+      paymentUrl = session.url;
+    } else {
+      // PayPal Link
+      const business = process.env.PAYPAL_BUSINESS_EMAIL || 'sales@4puppies.cl';
+      paymentUrl = `https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=${encodeURIComponent(business)}&item_name=${encodeURIComponent(productName)}&amount=${total}&currency_code=USD&custom=${orderId}&return=${encodeURIComponent('https://globalshop.4puppies.cl/success')}`;
+    }
+
+    res.json({ success: true, paymentUrl, orderId });
+  } catch (error) {
+    console.error('Manual order error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.post('/api/admin/orders/:id/track', async (req, res) => {
   const { id } = req.params;
   const { trackingNumber } = req.body;
