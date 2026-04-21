@@ -60,7 +60,7 @@ app.post('/api/webhook', express.raw({ type: 'application/json' }), async (req, 
             </div>
 
             <p style="background: #fffbeb; border: 1px solid #fef3c7; padding: 15px; border-radius: 10px; font-size: 13px; color: #92400e;">
-              <b>Mistake in the info?</b> Please reply to this email or send us a <a href="https://wa.me/56965033785">WhatsApp message</a> immediately to correct it before production progresses.
+              <b>Mistake in the info?</b> Please reply to this email or send us a <a href="https://wa.me/56958793900">WhatsApp message</a> immediately to correct it before production progresses.
             </p>
 
             <p><b>Next Step:</b> Preparation takes 8-10 business days. As soon as it's finished, you'll receive another email with your FedEx tracking number.</p>
@@ -320,7 +320,7 @@ app.post('/api/create-checkout-session', async (req, res) => {
     const orderId = orderResult.rows[0].id;
 
     // 2. Create Stripe Session with Breakdown
-    let shippingCost = 25; // Define fixed shipping cost (USD)
+    let shippingCost = 45; // Define fixed shipping cost (USD)
     let itemPrice = orderDetails.price - shippingCost;
 
     // Prevent negative item price in Stripe for tests or heavy discounts
