@@ -706,28 +706,64 @@ const AllReviewsModal = ({ isOpen, onClose, reviews, onZoom }: { isOpen: boolean
 
 const ManualOrderModal = ({ isOpen, onClose, onRefresh }: { isOpen: boolean, onClose: () => void, onRefresh: () => void }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [paymentLink, setPaymentLink] = useState('');
+  const [statusMessage, setStatusMessage] = useState<{type: 'success' | 'error', link?: string} | null>(null);
   const [formData, setFormData] = useState({
     customerName: '', email: '', phone: '', address: '', city: '', region: '', zipcode: '', country: '',
-    productName: '', petName: '', petNumber: '', sizeKey: '', total: '', paymentMethod: 'stripe'
+    items: [
+      { name: '', details: '', price: '', size: '' },
+      { name: '', details: '', price: '', size: '' },
+      { name: '', details: '', price: '', size: '' }
+    ],
+    shippingCost: '45',
+    paymentMethod: 'stripe'
   });
 
   if (!isOpen) return null;
 
+  const updateItem = (index: number, field: string, value: string) => {
+    const newItems = [...formData.items];
+    newItems[index] = { ...newItems[index], [field]: value };
+    setFormData({ ...formData, items: newItems });
+  };
+
+  const calculateTotal = () => {
+    const itemsTotal = formData.items.reduce((sum, item) => sum + (parseFloat(item.price) || 0), 0);
+    return itemsTotal + (parseFloat(formData.shippingCost) || 0);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    setPaymentLink('');
+    setStatusMessage(null);
+    
     try {
+      const total = calculateTotal();
+      // Combine multiple items into single strings for the database
+      const combinedProducts = formData.items.filter(i => i.name).map(i => i.name).join(' + ');
+      const combinedDetails = formData.items.filter(i => i.name).map(i => i.details).join(' | ');
+      const combinedSizes = formData.items.filter(i => i.name).map(i => i.size).join(', ');
+
       const resp = await fetch('/api/admin/create-manual-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify({
+          ...formData,
+          productName: combinedProducts,
+          petName: combinedDetails, // Using this for combined details in manual
+          sizeKey: combinedSizes,
+          total: total
+        })
       });
       const data = await resp.json();
       if (data.success) {
-        setPaymentLink(data.paymentUrl);
-        onRefresh();
+        if (formData.paymentMethod === 'paid') {
+          alert("Order registered as PAID! 🤘");
+          onRefresh();
+          onClose();
+        } else {
+          setStatusMessage({ type: 'success', link: data.paymentUrl });
+          onRefresh();
+        }
       }
     } catch (err) {
       alert("Error creating order");
@@ -738,93 +774,123 @@ const ManualOrderModal = ({ isOpen, onClose, onRefresh }: { isOpen: boolean, onC
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-      <div className="bg-white rounded-[2.5rem] max-w-2xl w-full max-h-[90vh] overflow-y-auto p-8 shadow-2xl relative">
-        <button onClick={onClose} className="absolute top-6 right-6 p-2 hover:bg-slate-100 rounded-full transition-all text-slate-400"><X size={24} /></button>
-        <h2 className="text-2xl font-black uppercase tracking-tighter mb-6 flex items-center gap-2">
-          <FileText className="text-blue-600" /> Create <span className="text-blue-600">Manual Order</span>
-        </h2>
+      <div className="bg-white rounded-[3rem] max-w-3xl w-full max-h-[90vh] overflow-y-auto p-10 shadow-3xl relative custom-scrollbar">
+        <button onClick={onClose} className="absolute top-8 right-8 p-2 hover:bg-slate-100 rounded-full transition-all text-slate-400">
+          <X size={24} />
+        </button>
         
-        {paymentLink ? (
-          <div className="bg-green-50 p-8 rounded-3xl border border-green-100 text-center space-y-4 animate-in zoom-in-95 duration-300">
-            <div className="w-16 h-16 bg-green-500 text-white rounded-full flex items-center justify-center mx-auto shadow-lg"><Check size={32} strokeWidth={3} /></div>
-            <h3 className="text-xl font-black text-green-800 uppercase tracking-tighter">Order Created!</h3>
-            <p className="text-sm font-bold text-green-700">Copy the link below and send it to your customer:</p>
-            <div className="flex gap-2">
-              <input readOnly value={paymentLink} className="flex-grow bg-white border border-green-200 p-4 rounded-xl text-xs font-mono font-bold" />
+        <div className="mb-8">
+          <h2 className="text-3xl font-black uppercase tracking-tighter flex items-center gap-3">
+            <div className="p-3 bg-blue-600 rounded-2xl text-white shadow-lg shadow-blue-100"><FileText size={24} /></div>
+            Create <span className="text-blue-600">Manual Order</span>
+          </h2>
+          <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mt-2 ml-14">Generate payments for custom sales</p>
+        </div>
+        
+        {statusMessage?.type === 'success' && statusMessage.link ? (
+          <div className="bg-blue-50 p-10 rounded-[2.5rem] border border-blue-100 text-center space-y-6 animate-in zoom-in-95 duration-500">
+            <div className="w-20 h-20 bg-blue-600 text-white rounded-full flex items-center justify-center mx-auto shadow-2xl scale-110"><Check size={40} strokeWidth={3} /></div>
+            <div>
+              <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter">Order Successfully Created!</h3>
+              <p className="text-sm font-bold text-slate-500 mt-1">Copy and send this link to your customer via DM or WhatsApp</p>
+            </div>
+            <div className="flex gap-3 bg-white p-2 rounded-2xl border border-blue-100 shadow-inner">
+              <input readOnly value={statusMessage.link} className="flex-grow bg-transparent p-4 rounded-xl text-xs font-mono font-bold text-blue-600" />
               <button 
-                onClick={() => { navigator.clipboard.writeText(paymentLink); alert("Link copied! 📋"); }}
-                className="bg-green-600 text-white px-6 rounded-xl font-black uppercase text-[10px] tracking-widest hover:bg-green-700"
+                onClick={() => { navigator.clipboard.writeText(statusMessage.link!); alert("Link copied to clipboard! 📋"); }}
+                className="bg-blue-600 text-white px-8 rounded-xl font-black uppercase text-[10px] tracking-widest hover:bg-blue-700 transition-all active:scale-95"
               >
-                Copy
+                Copy Link
               </button>
             </div>
-            <button onClick={onClose} className="text-xs font-black uppercase tracking-widest text-green-700/50 hover:text-green-700 underline pt-4">Close and go back</button>
+            <button onClick={onClose} className="bg-slate-900 text-white px-8 py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-black transition-all">Done, Back to Dashboard</button>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid md:grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Customer Name</label>
-                <input required type="text" className="w-full bg-slate-50 border-2 border-transparent p-3 rounded-xl text-sm font-bold focus:bg-white focus:border-blue-600 outline-none" 
-                  value={formData.customerName} onChange={e => setFormData({...formData, customerName: e.target.value})} />
+          <form onSubmit={handleSubmit} className="space-y-8">
+            {/* Customer Info */}
+            <div className="space-y-4">
+              <h4 className="text-[10px] font-black uppercase text-blue-600 tracking-[0.2em] flex items-center gap-2">
+                <div className="w-2 h-2 bg-blue-600 rounded-full"></div> Customer Information
+              </h4>
+              <div className="grid md:grid-cols-2 gap-4">
+                <input required placeholder="Full Name" className="w-full bg-slate-50 border-2 border-transparent p-4 rounded-2xl text-sm font-bold focus:bg-white focus:border-blue-600 outline-none transition-all" value={formData.customerName} onChange={e => setFormData({...formData, customerName: e.target.value})} />
+                <input required placeholder="Email Address" type="email" className="w-full bg-slate-50 border-2 border-transparent p-4 rounded-2xl text-sm font-bold focus:bg-white focus:border-blue-600 outline-none transition-all" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} />
+                <input required placeholder="Phone Number (+56...)" className="w-full bg-slate-50 border-2 border-transparent p-4 rounded-2xl text-sm font-bold focus:bg-white focus:border-blue-600 outline-none transition-all" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} />
+                <input placeholder="Country" className="w-full bg-slate-50 border-2 border-transparent p-4 rounded-2xl text-sm font-bold focus:bg-white focus:border-blue-600 outline-none transition-all" value={formData.country} onChange={e => setFormData({...formData, country: e.target.value})} />
               </div>
-              <div className="space-y-1">
-                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Email</label>
-                <input required type="email" className="w-full bg-slate-50 border-2 border-transparent p-3 rounded-xl text-sm font-bold focus:bg-white focus:border-blue-600 outline-none" 
-                  value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} />
+              <div className="grid md:grid-cols-3 gap-4">
+                <input placeholder="City" className="w-full bg-slate-50 border-2 border-transparent p-4 rounded-2xl text-sm font-bold focus:bg-white focus:border-blue-600 outline-none transition-all" value={formData.city} onChange={e => setFormData({...formData, city: e.target.value})} />
+                <input placeholder="Region/State" className="w-full bg-slate-50 border-2 border-transparent p-4 rounded-2xl text-sm font-bold focus:bg-white focus:border-blue-600 outline-none transition-all" value={formData.region} onChange={e => setFormData({...formData, region: e.target.value})} />
+                <input placeholder="ZIP / Postal Code" className="w-full bg-slate-50 border-2 border-transparent p-4 rounded-2xl text-sm font-bold focus:bg-white focus:border-blue-600 outline-none transition-all" value={formData.zipcode} onChange={e => setFormData({...formData, zipcode: e.target.value})} />
+              </div>
+              <input required placeholder="Street Address & House Number" className="w-full bg-slate-50 border-2 border-transparent p-4 rounded-2xl text-sm font-bold focus:bg-white focus:border-blue-600 outline-none transition-all" value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} />
+            </div>
+
+            {/* Products Selection */}
+            <div className="space-y-4">
+              <h4 className="text-[10px] font-black uppercase text-blue-600 tracking-[0.2em] flex items-center gap-2">
+                <div className="w-2 h-2 bg-blue-600 rounded-full"></div> Product Selection (Up to 3)
+              </h4>
+              <div className="space-y-3">
+                {formData.items.map((item, idx) => (
+                  <div key={idx} className="grid grid-cols-12 gap-3 p-4 bg-slate-50 rounded-[1.5rem] border border-slate-100">
+                    <div className="col-span-1 flex items-center justify-center font-black text-slate-300">#{idx+1}</div>
+                    <input placeholder="Team/Product" className="col-span-4 bg-white border border-slate-200 p-3 rounded-xl text-xs font-bold outline-none focus:border-blue-400" value={item.name} onChange={e => updateItem(idx, 'name', e.target.value)} />
+                    <input placeholder="Pet Info (Leo #10)" className="col-span-3 bg-white border border-slate-200 p-3 rounded-xl text-xs font-bold outline-none focus:border-blue-400" value={item.details} onChange={e => updateItem(idx, 'details', e.target.value)} />
+                    <input placeholder="Size" className="col-span-2 bg-white border border-slate-200 p-3 rounded-xl text-xs font-bold outline-none focus:border-blue-400 text-center" value={item.size} onChange={e => updateItem(idx, 'size', e.target.value)} />
+                    <div className="col-span-2 relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold">$</span>
+                      <input placeholder="Price" type="number" className="w-full bg-white border border-slate-200 p-3 pl-6 rounded-xl text-xs font-black text-blue-600 outline-none focus:border-blue-400" value={item.price} onChange={e => updateItem(idx, 'price', e.target.value)} />
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
 
-            <div className="grid md:grid-cols-3 gap-4">
-              <div className="space-y-1 col-span-2">
-                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Address</label>
-                <input required type="text" className="w-full bg-slate-50 border-2 border-transparent p-3 rounded-xl text-sm font-bold focus:bg-white focus:border-blue-600 outline-none" 
-                  value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} />
-              </div>
-              <div className="space-y-1">
-                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Country</label>
-                <input required type="text" className="w-full bg-slate-50 border-2 border-transparent p-3 rounded-xl text-sm font-bold focus:bg-white focus:border-blue-600 outline-none" 
-                  value={formData.country} onChange={e => setFormData({...formData, country: e.target.value})} />
-              </div>
-            </div>
+            {/* Totals and Payment */}
+            <div className="bg-slate-900 rounded-[2.5rem] p-8 text-white space-y-6">
+              <div className="grid md:grid-cols-2 gap-8 items-center">
+                <div className="space-y-4">
+                  <p className="text-[10px] font-black uppercase text-blue-400 tracking-widest leading-none">Payment Method</p>
+                  <div className="flex flex-col gap-3">
+                    <label className={`flex items-center gap-3 p-4 rounded-2xl cursor-pointer border-2 transition-all ${formData.paymentMethod === 'stripe' ? 'bg-blue-600 border-white shadow-lg' : 'bg-slate-800 border-transparent hover:bg-slate-700'}`}>
+                      <input type="radio" value="stripe" checked={formData.paymentMethod === 'stripe'} onChange={e => setFormData({...formData, paymentMethod: e.target.value})} className="hidden" />
+                      <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${formData.paymentMethod === 'stripe' ? 'border-white bg-white' : 'border-slate-500'}`}>{formData.paymentMethod === 'stripe' && <div className="w-2 h-2 bg-blue-600 rounded-full" />}</div>
+                      <span className="text-xs font-black uppercase tracking-widest">Stripe Link</span>
+                    </label>
+                    <label className={`flex items-center gap-3 p-4 rounded-2xl cursor-pointer border-2 transition-all ${formData.paymentMethod === 'paypal' ? 'bg-blue-600 border-white shadow-lg' : 'bg-slate-800 border-transparent hover:bg-slate-700'}`}>
+                      <input type="radio" value="paypal" checked={formData.paymentMethod === 'paypal'} onChange={e => setFormData({...formData, paymentMethod: e.target.value})} className="hidden" />
+                      <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${formData.paymentMethod === 'paypal' ? 'border-white bg-white' : 'border-slate-500'}`}>{formData.paymentMethod === 'paypal' && <div className="w-2 h-2 bg-blue-600 rounded-full" />}</div>
+                      <span className="text-xs font-black uppercase tracking-widest">PayPal Link</span>
+                    </label>
+                    <label className={`flex items-center gap-3 p-4 rounded-2xl cursor-pointer border-2 transition-all ${formData.paymentMethod === 'paid' ? 'bg-green-600 border-white shadow-lg' : 'bg-slate-800 border-transparent hover:bg-slate-700'}`}>
+                      <input type="radio" value="paid" checked={formData.paymentMethod === 'paid'} onChange={e => setFormData({...formData, paymentMethod: e.target.value})} className="hidden" />
+                      <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${formData.paymentMethod === 'paid' ? 'border-white bg-white' : 'border-slate-500'}`}>{formData.paymentMethod === 'paid' && <div className="w-2 h-2 bg-green-600 rounded-full" />}</div>
+                      <span className="text-xs font-black uppercase tracking-widest">Already Paid (No Link)</span>
+                    </label>
+                  </div>
+                </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="space-y-1">
-                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Product</label>
-                <input required placeholder="Custom Jersey" type="text" className="w-full bg-slate-50 border-2 border-transparent p-3 rounded-xl text-sm font-bold focus:bg-white focus:border-blue-600 outline-none" 
-                  value={formData.productName} onChange={e => setFormData({...formData, productName: e.target.value})} />
+                <div className="bg-slate-800 p-6 rounded-3xl space-y-4 border border-slate-700">
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Shipping Cost</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-slate-500 font-black">$</span>
+                      <input type="number" className="bg-slate-700 border-none p-2 w-20 rounded-lg text-right font-black outline-none focus:ring-1 focus:ring-blue-500" value={formData.shippingCost} onChange={e => setFormData({...formData, shippingCost: e.target.value})} />
+                    </div>
+                  </div>
+                  <div className="border-t border-slate-700 pt-4 flex justify-between items-center">
+                    <span className="text-blue-400 font-black uppercase tracking-widest text-xs">Final Total</span>
+                    <span className="text-3xl font-black text-white italic tracking-tighter">${calculateTotal()}.00<span className="text-[10px] not-italic text-slate-500 ml-1 uppercase">USD</span></span>
+                  </div>
+                </div>
               </div>
-              <div className="space-y-1">
-                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Pet Details</label>
-                <input required placeholder="Bruno #10" type="text" className="w-full bg-slate-50 border-2 border-transparent p-3 rounded-xl text-sm font-bold focus:bg-white focus:border-blue-600 outline-none" 
-                  value={formData.petName} onChange={e => setFormData({...formData, petName: e.target.value})} />
-              </div>
-              <div className="space-y-1">
-                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Price (USD)</label>
-                <input required type="number" className="w-full bg-slate-50 border-2 border-transparent p-3 rounded-xl text-sm font-black text-blue-600 focus:bg-white focus:border-blue-600 outline-none" 
-                  value={formData.total} onChange={e => setFormData({...formData, total: e.target.value})} />
-              </div>
-              <div className="space-y-1">
-                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Size</label>
-                <input required placeholder="M" type="text" className="w-full bg-slate-50 border-2 border-transparent p-3 rounded-xl text-sm font-bold focus:bg-white focus:border-blue-600 outline-none" 
-                  value={formData.sizeKey} onChange={e => setFormData({...formData, sizeKey: e.target.value})} />
-              </div>
-            </div>
 
-            <div className="flex gap-4 p-5 bg-slate-50 rounded-2xl border border-slate-100">
-               <label className="flex items-center gap-2 cursor-pointer group">
-                 <input type="radio" name="pay" value="stripe" checked={formData.paymentMethod === 'stripe'} onChange={e => setFormData({...formData, paymentMethod: e.target.value})} className="accent-blue-600 h-4 w-4" />
-                 <span className="text-[10px] font-black uppercase tracking-widest group-hover:text-blue-600 transition-all">Stripe Link</span>
-               </label>
-               <label className="flex items-center gap-2 cursor-pointer group">
-                 <input type="radio" name="pay" value="paypal" checked={formData.paymentMethod === 'paypal'} onChange={e => setFormData({...formData, paymentMethod: e.target.value})} className="accent-blue-600 h-4 w-4" />
-                 <span className="text-[10px] font-black uppercase tracking-widest group-hover:text-blue-600 transition-all">PayPal Link</span>
-               </label>
+              <button disabled={isSubmitting} type="submit" className={`w-full font-black py-6 rounded-2xl uppercase tracking-[0.2em] text-sm transition-all shadow-2xl flex items-center justify-center gap-3 active:scale-[0.98] ${formData.paymentMethod === 'paid' ? 'bg-green-500 hover:bg-green-600' : 'bg-blue-600 hover:bg-blue-700'}`}>
+                {isSubmitting ? 'Processing Order...' : (formData.paymentMethod === 'paid' ? 'Complete Paid Order' : 'Generate Payment Link')} 
+                {!isSubmitting && <ChevronRight size={20} strokeWidth={3} />}
+              </button>
             </div>
-
-            <button disabled={isSubmitting} type="submit" className="w-full bg-blue-600 text-white font-black py-5 rounded-2xl uppercase tracking-widest text-xs hover:bg-blue-700 transition-all shadow-xl shadow-blue-100 flex items-center justify-center gap-3 active:scale-[0.98]">
-              {isSubmitting ? 'Generating Payment Link...' : 'Generate and Create Order'} <ChevronRight size={18} />
-            </button>
           </form>
         )}
       </div>

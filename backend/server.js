@@ -522,11 +522,13 @@ app.post('/api/admin/create-manual-order', async (req, res) => {
   } = req.body;
 
   try {
+    const initialStatus = paymentMethod === 'paid' ? 'paid' : 'pending';
+
     const result = await pool.query(
       `INSERT INTO orders 
       (customer_name, email, phone, address, city, region, zipcode, country, product_name, pet_name, pet_number, size_key, total, status) 
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING id`,
-      [customerName, email, phone, address, city, region, zipcode, country, productName, petName, petNumber, sizeKey, total, 'pending']
+      [customerName, email, phone, address, city, region, zipcode, country, productName, petName, petNumber, sizeKey, total, initialStatus]
     );
     const orderId = result.rows[0].id;
     let paymentUrl = '';
@@ -550,7 +552,7 @@ app.post('/api/admin/create-manual-order', async (req, res) => {
         metadata: { orderId: orderId.toString() }
       });
       paymentUrl = session.url;
-    } else {
+    } else if (paymentMethod === 'paypal') {
       // PayPal Link
       const business = process.env.PAYPAL_BUSINESS_EMAIL || 'rosanella.galindo@gmail.com';
       paymentUrl = `https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=${encodeURIComponent(business)}&item_name=${encodeURIComponent(productName)}&amount=${total}&currency_code=USD&custom=${orderId}&return=${encodeURIComponent('https://globalshop.4puppies.cl/success')}`;
