@@ -41,7 +41,7 @@ const PRODUCTS = [
   { id: 5, name: "Brazil Canary", description: "The most legendary soccer yellow.", images: ["/images/brazil_pet_jersey.jpg", "/images/brazil_pet_jersey.jpg"] },
   { id: 6, name: "Colombia El Tricolor", description: "The vibrant yellow of South American sun.", images: ["/images/colombia_front.jpg", "/images/colombia_back.jpg"] },
   { id: 7, name: "England Lionheart", description: "Support the Three Lions.", images: ["/images/england_pet_jersey.jpg", "/images/england_pet_jersey.jpg"] },
-  { id: 8, name: "Italy Azzurri", description: "Timeless Mediterranean blue.", images: ["/images/italy_pet_jersey.jpg", "/images/italy_pet_jersey.jpg"] },
+  { id: 8, name: "Spain La Roja", description: "The powerful red of Spain.", images: ["/images/spain_front.jpg", "/images/spain_back.jpg"] },
 ];
 
 const Header = () => (
