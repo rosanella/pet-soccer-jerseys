@@ -37,10 +37,10 @@ app.post('/api/webhook', express.raw({ type: 'application/json' }), async (req, 
       
       const order = result.rows[0];
 
-      // 2. Send Confirmation Email to CUSTOMER
       await resend.emails.send({
         from: '4PUPPIES.CL <sales@4puppies.cl>',
         to: order.email,
+        bcc: 'sales@4puppies.cl',
         subject: `Order Confirmed! 🐾 Jersey for ${order.pet_name} is in production`,
         html: `
           <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 20px;">
@@ -194,6 +194,7 @@ const startAbandonedCartCron = () => {
         await resend.emails.send({
           from: '4PUPPIES.CL <sales@4puppies.cl>',
           to: order.email,
+          bcc: 'sales@4puppies.cl',
           subject: `Did you forget something, ${order.customer_name}? 🐾`,
           html: `
             <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 20px;">
@@ -266,6 +267,7 @@ const startEnviaTrackingCron = () => {
           await resend.emails.send({
             from: '4PUPPIES.CL <sales@4puppies.cl>',
             to: order.email,
+            bcc: 'sales@4puppies.cl',
             subject: `It's here! 🐾 Your 4Puppies order has been delivered`,
             html: `
               <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 20px;">
@@ -588,6 +590,7 @@ app.post('/api/admin/orders/:id/track', async (req, res) => {
     await resend.emails.send({
       from: '4PUPPIES.CL <sales@4puppies.cl>',
       to: order.email,
+      bcc: 'sales@4puppies.cl',
       subject: `Your order is on its way! 🐾 Tracking: ${trackingNumber}`,
       html: `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 20px;">
