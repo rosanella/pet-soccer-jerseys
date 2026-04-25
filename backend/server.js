@@ -37,6 +37,20 @@ app.post('/api/webhook', express.raw({ type: 'application/json' }), async (req, 
       
       const order = result.rows[0];
 
+      // 2. Generate a Unique Promotion Code for the NEXT purchase (Valid for 60 days)
+      let discountCode = 'THANKYOU10'; // Fallback
+      try {
+        const promo = await stripe.promotionCodes.create({
+          coupon: 'HappyPet10',
+          max_redemptions: 1,
+          expires_at: Math.floor(Date.now() / 1000) + (60 * 24 * 60 * 60), // 60 days from now
+          metadata: { orderId: orderId.toString() }
+        });
+        discountCode = promo.code;
+      } catch (err) {
+        console.error('Error generating promo code:', err);
+      }
+
       await resend.emails.send({
         from: '4PUPPIES.CL <sales@4puppies.cl>',
         to: order.email,
@@ -57,6 +71,15 @@ app.post('/api/webhook', express.raw({ type: 'application/json' }), async (req, 
                 ${order.city}, ${order.region} ${order.zipcode}<br/>
                 <b>${order.country}</b>
               </p>
+            </div>
+
+            <div style="background: #eff6ff; border: 2px dashed #3b82f6; padding: 25px; border-radius: 20px; margin: 30px 0; text-align: center;">
+              <h3 style="margin-top: 0; color: #1e40af; text-transform: uppercase; font-size: 14px;">🎁 A Gift for ${order.pet_name}!</h3>
+              <p style="font-size: 13px; color: #374151;">Enjoy <b>10% OFF</b> your next jersey with this unique code:</p>
+              <div style="background: white; padding: 10px; border-radius: 10px; font-family: monospace; font-size: 24px; font-weight: 900; color: #2563eb; margin: 15px 0;">
+                ${discountCode}
+              </div>
+              <p style="font-size: 11px; color: #64748b;">Valid for exactly 60 days from today. Woof!</p>
             </div>
 
             <p style="background: #fffbeb; border: 1px solid #fef3c7; padding: 15px; border-radius: 10px; font-size: 13px; color: #92400e;">
