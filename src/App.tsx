@@ -940,6 +940,18 @@ const AdminOrders = ({ onBack }: { onBack: () => void }) => {
     }
   };
 
+  const handleDeleteOrder = async (id: number) => {
+    if (!confirm("Are you sure you want to delete this order? This action cannot be undone. ⚠️")) return;
+    try {
+      const resp = await fetch(`/api/admin/orders/${id}`, { method: 'DELETE' });
+      if (resp.ok) {
+        fetchOrders();
+      }
+    } catch (error) {
+      alert("Error deleting order");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 p-6">
       <div className="max-w-6xl mx-auto space-y-8">
@@ -1014,12 +1026,21 @@ const AdminOrders = ({ onBack }: { onBack: () => void }) => {
                       </h4>
                       <p className="text-xs font-bold text-blue-600">{order.email} • {order.phone}</p>
                     </div>
-                    <div className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${
-                      order.status === 'shipped' ? 'bg-green-100 text-green-600' : 
-                      order.status === 'delivered' ? 'bg-blue-100 text-blue-600' :
-                      'bg-orange-100 text-orange-600'
-                    }`}>
-                      {order.status}
+                    <div className="flex items-center gap-3">
+                      <div className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${
+                        order.status === 'shipped' ? 'bg-green-100 text-green-600' : 
+                        order.status === 'delivered' ? 'bg-blue-100 text-blue-600' :
+                        'bg-orange-100 text-orange-600'
+                      }`}>
+                        {order.status}
+                      </div>
+                      <button 
+                        onClick={() => handleDeleteOrder(order.id)}
+                        className="p-1.5 text-slate-300 hover:text-red-500 transition-colors"
+                        title="Delete Order"
+                      >
+                        <X size={18} />
+                      </button>
                     </div>
                   </div>
                   
