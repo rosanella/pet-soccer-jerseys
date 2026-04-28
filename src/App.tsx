@@ -16,7 +16,8 @@ import {
   Upload,
   Search,
   FileText,
-  ExternalLink
+  ExternalLink,
+  RefreshCcw
 } from 'lucide-react';
 
 const PRICING_TABLE: Record<string, number> = {
@@ -991,6 +992,24 @@ const AdminOrders = ({ onBack }: { onBack: () => void }) => {
           </div>
 
           <div className="flex gap-4">
+            <button 
+              onClick={async () => {
+                const btn = document.activeElement as HTMLButtonElement;
+                if (btn) btn.disabled = true;
+                try {
+                  await fetch('/api/admin/sync-tracking', { method: 'POST' });
+                  alert("FedEx sync complete! Emails sent if items were delivered. 🚚");
+                  fetchOrders();
+                } catch (e) {
+                  alert("Sync failed");
+                } finally {
+                  if (btn) btn.disabled = false;
+                }
+              }}
+              className="bg-white border-2 border-slate-100 text-slate-600 px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all flex items-center gap-2"
+            >
+              <RefreshCcw size={14} /> Sync FedEx Status
+            </button>
             <button onClick={() => setManualOrderOpen(true)} className="bg-blue-600 text-white px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all flex items-center gap-2">
               <FileText size={14} /> Custom Sale
             </button>

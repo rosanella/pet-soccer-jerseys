@@ -105,8 +105,11 @@ app.post('/api/webhook', express.raw({ type: 'application/json' }), async (req, 
             <p><strong>Customer:</strong> ${order.customer_name} (${order.email})</p>
             <p><strong>Total:</strong> $${order.total} USD</p>
             <p><strong>Product:</strong> ${order.product_name} - ${order.size_key}</p>
-            <br/>
-            <p>Go to your <a href="${process.env.FRONTEND_URL || 'https://globalshop.4puppies.cl'}/admin-orders" style="background:#2563eb; color:white; padding:10px 20px; border-radius:8px; text-decoration:none; font-weight:bold;">Admin Dashboard</a> to process this order.</p>
+            <div style="margin-top: 30px;">
+              <a href="${process.env.FRONTEND_URL || 'https://globalshop.4puppies.cl'}/admin-orders" style="display: block; background:#2563eb; color:white; padding:15px 25px; border-radius:12px; text-decoration:none; font-weight:bold; text-align: center; text-transform: uppercase; font-size: 14px;">
+                Open Admin Dashboard
+              </a>
+            </div>
           </div>
         `
       });
@@ -248,67 +251,68 @@ const startAbandonedCartCron = () => {
   }, 15 * 60 * 1000); // 15 minutes
 };
 
+// Logic to check tracking status with Envia.com
+const checkAllTrackingStatuses = async () => {
+  if (!process.env.ENVIA_TOKEN) return;
+  
+  try {
+    console.log('Checking Envia.com for delivered packages...');
+    const result = await pool.query(
+      "SELECT id, tracking_number, email, customer_name FROM orders WHERE status = 'shipped' AND tracking_number IS NOT NULL"
+    );
+
+    for (const order of result.rows) {
+      const response = await fetch('https://api.envia.com/ship/generaltrack/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${process.env.ENVIA_TOKEN}`
+        },
+        body: JSON.stringify({
+          trackingNumbers: [order.tracking_number]
+        })
+      });
+
+      const data = await response.json();
+      const trackInfo = data.data?.[0];
+      
+      if (trackInfo && (trackInfo.status === 'delivered' || trackInfo.status?.toLowerCase() === 'entregado')) {
+        await pool.query(
+          "UPDATE orders SET status = 'delivered', delivered_at = CURRENT_TIMESTAMP WHERE id = $1",
+          [order.id]
+        );
+        console.log(`Order #${order.id} marked as DELIVERED by Envia.com`);
+        
+        await resend.emails.send({
+          from: '4PUPPIES.CL <sales@4puppies.cl>',
+          to: order.email,
+          bcc: 'sales@4puppies.cl',
+          subject: `It's here! 🐾 Your 4Puppies order has been delivered`,
+          html: `
+            <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 20px;">
+              <h1 style="color: #22c55e;">Delivered! 🎉</h1>
+              <p>Hi ${order.customer_name},</p>
+              <p>We've been notified that your order <b>#${order.id}</b> has been successfully delivered.</p>
+              <p>We hope you and your pet love the new jersey! If everything is perfect, we'd love it if you could share a photo with us on Instagram <b>@4puppies.cl</b></p>
+              <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
+              <p style="font-size: 11px; color: #94a3b8; text-align: center;">4PUPPIES.CL • PREMIUM PET APPAREL</p>
+            </div>
+          `
+        });
+      }
+    }
+  } catch (error) {
+    console.error('Tracking Check Error:', error);
+  }
+};
+
 // Envia.com Tracking Supervisor (Runs every 1 hour)
 const startEnviaTrackingCron = () => {
   if (!process.env.ENVIA_TOKEN) {
     console.warn('ENVIA_TOKEN not found. Automated tracking disabled.');
     return;
   }
-
-  setInterval(async () => {
-    try {
-      console.log('Checking Envia.com for delivered packages...');
-      const result = await pool.query(
-        "SELECT id, tracking_number, email, customer_name FROM orders WHERE status = 'shipped' AND tracking_number IS NOT NULL"
-      );
-
-      for (const order of result.rows) {
-        const response = await fetch('https://api.envia.com/ship/generaltrack/', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${process.env.ENVIA_TOKEN}`
-          },
-          body: JSON.stringify({
-            trackingNumbers: [order.tracking_number]
-          })
-        });
-
-        const data = await response.json();
-        
-        // Envia.com returns an array of tracking results
-        const trackInfo = data.data?.[0];
-        
-        if (trackInfo && (trackInfo.status === 'delivered' || trackInfo.status?.toLowerCase() === 'entregado')) {
-          await pool.query(
-            "UPDATE orders SET status = 'delivered', delivered_at = CURRENT_TIMESTAMP WHERE id = $1",
-            [order.id]
-          );
-          console.log(`Order #${order.id} marked as DELIVERED by Envia.com`);
-          
-          // Optional: Send "Order Delivered" email
-          await resend.emails.send({
-            from: '4PUPPIES.CL <sales@4puppies.cl>',
-            to: order.email,
-            bcc: 'sales@4puppies.cl',
-            subject: `It's here! 🐾 Your 4Puppies order has been delivered`,
-            html: `
-              <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 20px;">
-                <h1 style="color: #22c55e;">Delivered! 🎉</h1>
-                <p>Hi ${order.customer_name},</p>
-                <p>We've been notified that your order <b>#${order.id}</b> has been successfully delivered.</p>
-                <p>We hope you and your pet love the new jersey! If everything is perfect, we'd love it if you could share a photo with us on Instagram <b>@4puppies.cl</b></p>
-                <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
-                <p style="font-size: 11px; color: #94a3b8; text-align: center;">4PUPPIES.CL • PREMIUM PET APPAREL</p>
-              </div>
-            `
-          });
-        }
-      }
-    } catch (error) {
-      console.error('Envia Tracking Cron Error:', error);
-    }
-  }, 60 * 60 * 1000); // 1 hour
+  setInterval(checkAllTrackingStatuses, 60 * 60 * 1000); // 1 hour
 };
 
 // Order endpoint
@@ -654,6 +658,15 @@ app.delete('/api/admin/orders/:id', async (req, res) => {
   } catch (error) {
     console.error('Delete order error:', error);
     res.status(500).json({ error: 'Failed to delete order' });
+  }
+});
+
+app.post('/api/admin/sync-tracking', async (req, res) => {
+  try {
+    await checkAllTrackingStatuses();
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 });
 
