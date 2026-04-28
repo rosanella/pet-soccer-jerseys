@@ -1045,7 +1045,7 @@ const AdminOrders = ({ onBack }: { onBack: () => void }) => {
               <tr>
                 <td><strong>${order.product_name}</strong></td>
                 <td>${order.size_key}</td>
-                <td>Nombre: ${order.pet_name} | Número: ${order.pet_number || 'N/A'}</td>
+                <td>${order.pet_name} / ${order.pet_number || '0'}</td>
                 <td style="text-align: right;">USD ${order.total}</td>
               </tr>
             </tbody>
