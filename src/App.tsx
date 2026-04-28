@@ -18,7 +18,8 @@ import {
   FileText,
   ExternalLink,
   RefreshCcw,
-  Package
+  Package,
+  Printer
 } from 'lucide-react';
 
 const PRICING_TABLE: Record<string, number> = {
@@ -954,6 +955,98 @@ const AdminOrders = ({ onBack }: { onBack: () => void }) => {
     }
   };
 
+  const printPackingSlip = (order: Order) => {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    const html = `
+      <html>
+        <head>
+          <title>Packing Slip - Order #${order.id}</title>
+          <style>
+            @page { size: letter; margin: 0.5in; }
+            body { font-family: 'Helvetica', sans-serif; color: #333; line-height: 1.5; padding: 20px; }
+            .header { display: flex; justify-content: space-between; border-bottom: 2px solid #000; padding-bottom: 20px; margin-bottom: 30px; }
+            .shop-info h1 { margin: 0; color: #000; font-size: 28px; font-weight: 900; }
+            .order-info { text-align: right; }
+            .order-info h2 { margin: 0; font-size: 20px; }
+            .sections { display: flex; gap: 50px; margin-bottom: 40px; }
+            .section-title { font-weight: bold; text-transform: uppercase; font-size: 12px; color: #666; margin-bottom: 10px; border-bottom: 1px solid #eee; }
+            .items-table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+            .items-table th { text-align: left; background: #f9f9f9; padding: 10px; font-size: 12px; border-bottom: 1px solid #ddd; }
+            .items-table td { padding: 15px 10px; border-bottom: 1px solid #eee; font-size: 14px; }
+            .totals { margin-left: auto; width: 250px; }
+            .total-row { display: flex; justify-content: space-between; padding: 5px 0; }
+            .grand-total { border-top: 2px solid #000; margin-top: 10px; padding-top: 10px; font-weight: bold; font-size: 18px; }
+            .footer { margin-top: 100px; text-align: center; font-size: 12px; color: #999; border-top: 1px solid #eee; padding-top: 20px; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div class="shop-info">
+              <h1>4PUPPIES.CL</h1>
+              <p>Custom Pet Apparel<br/>globalshop.4puppies.cl</p>
+            </div>
+            <div class="order-info">
+              <h2>Pedido n.º ${order.id}</h2>
+              <p>Fecha: ${new Date(order.created_at).toLocaleDateString()}</p>
+            </div>
+          </div>
+
+          <div class="sections">
+            <div style="flex: 1;">
+              <div class="section-title">Enviar a:</div>
+              <p><strong>${order.customer_name}</strong><br/>
+              ${order.address}<br/>
+              ${order.city}, ${order.region} ${order.zipcode || ''}<br/>
+              ${order.country}</p>
+            </div>
+            <div style="flex: 1;">
+              <div class="section-title">Detalles del Pago:</div>
+              <p>Pagado con: Stripe Checkout<br/>
+              Estado: ${order.status.toUpperCase()}</p>
+            </div>
+          </div>
+
+          <div class="section-title">Artículos del Pedido</div>
+          <table class="items-table">
+            <thead>
+              <tr>
+                <th>Producto</th>
+                <th>Talla</th>
+                <th>Personalización</th>
+                <th style="text-align: right;">Precio</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>${order.product_name}</strong></td>
+                <td>${order.size_key}</td>
+                <td>Nombre: ${order.pet_name} | Número: ${order.pet_number || 'N/A'}</td>
+                <td style="text-align: right;">USD ${order.total}</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="totals">
+            <div class="total-row"><span>Subtotal:</span> <span>USD ${order.total}</span></div>
+            <div class="total-row"><span>Envío:</span> <span>USD 0.00</span></div>
+            <div class="total-row grand-total"><span>Total del pedido:</span> <span>USD ${order.total}</span></div>
+          </div>
+
+          <div class="footer">
+            <p>¡Gracias por confiar en 4Puppies para vestir a tu mascota!<br/>
+            Síguenos en Instagram @4puppies.cl</p>
+          </div>
+        </body>
+      </html>
+    `;
+
+    printWindow.document.write(html);
+    printWindow.document.close();
+    printWindow.print();
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 p-6">
       <div className="max-w-6xl mx-auto space-y-8">
@@ -1054,13 +1147,22 @@ const AdminOrders = ({ onBack }: { onBack: () => void }) => {
                       }`}>
                         {order.status}
                       </div>
-                      <button 
-                        onClick={() => handleDeleteOrder(order.id)}
-                        className="p-1.5 text-slate-300 hover:text-red-500 transition-colors"
-                        title="Delete Order"
-                      >
-                        <X size={18} />
-                      </button>
+                      <div className="flex items-center gap-1">
+                        <button 
+                          onClick={() => printPackingSlip(order)}
+                          className="p-1.5 text-slate-300 hover:text-blue-600 transition-colors"
+                          title="Print Packing Slip"
+                        >
+                          <Printer size={18} />
+                        </button>
+                        <button 
+                          onClick={() => handleDeleteOrder(order.id)}
+                          className="p-1.5 text-slate-300 hover:text-red-500 transition-colors"
+                          title="Delete Order"
+                        >
+                          <X size={18} />
+                        </button>
+                      </div>
                     </div>
                   </div>
                   
