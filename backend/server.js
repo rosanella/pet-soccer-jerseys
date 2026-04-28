@@ -39,17 +39,24 @@ app.post('/api/webhook', express.raw({ type: 'application/json' }), async (req, 
 
       // 2. Generate a Unique Promotion Code for the NEXT purchase (Valid for 60 days)
       let discountCode = 'THANKYOU10'; // Fallback
+      let expiresAt = Math.floor(Date.now() / 1000) + (60 * 24 * 60 * 60);
       try {
         const promo = await stripe.promotionCodes.create({
           coupon: 'HappyPet10',
           max_redemptions: 1,
-          expires_at: Math.floor(Date.now() / 1000) + (60 * 24 * 60 * 60), // 60 days from now
+          expires_at: expiresAt,
           metadata: { orderId: orderId.toString() }
         });
         discountCode = promo.code;
       } catch (err) {
         console.error('Error generating promo code:', err);
       }
+
+      // Store promo in DB
+      await pool.query(
+        'UPDATE orders SET promo_code = $1, promo_code_expires_at = to_timestamp($2) WHERE id = $3',
+        [discountCode, expiresAt, orderId]
+      );
 
       await resend.emails.send({
         from: '4PUPPIES.CL <sales@4puppies.cl>',
@@ -180,6 +187,8 @@ const initDb = async () => {
       ALTER TABLE orders ADD COLUMN IF NOT EXISTS shipped_at TIMESTAMP WITH TIME ZONE;
       ALTER TABLE orders ADD COLUMN IF NOT EXISTS delivered_at TIMESTAMP WITH TIME ZONE;
       ALTER TABLE orders ADD COLUMN IF NOT EXISTS abandoned_email_sent BOOLEAN DEFAULT FALSE;
+      ALTER TABLE orders ADD COLUMN IF NOT EXISTS promo_code TEXT;
+      ALTER TABLE orders ADD COLUMN IF NOT EXISTS promo_code_expires_at TIMESTAMP WITH TIME ZONE;
 
       CREATE TABLE IF NOT EXISTS reviews (
         id SERIAL PRIMARY KEY,
@@ -258,7 +267,7 @@ const checkAllTrackingStatuses = async () => {
   try {
     console.log('Checking Envia.com for delivered packages...');
     const result = await pool.query(
-      "SELECT id, tracking_number, email, customer_name FROM orders WHERE status = 'shipped' AND tracking_number IS NOT NULL"
+      "SELECT * FROM orders WHERE status = 'shipped' AND tracking_number IS NOT NULL"
     );
 
     for (const order of result.rows) {
@@ -288,6 +297,13 @@ const checkAllTrackingStatuses = async () => {
         );
         console.log(`Order #${order.id} marked as DELIVERED by Envia.com`);
         
+        // Calculate remaining days for promo
+        let daysLeft = 60;
+        if (order.promo_code_expires_at) {
+          const diff = new Date(order.promo_code_expires_at).getTime() - Date.now();
+          daysLeft = Math.max(0, Math.floor(diff / (1000 * 60 * 60 * 24)));
+        }
+
         await resend.emails.send({
           from: '4PUPPIES.CL <sales@4puppies.cl>',
           to: order.email,
@@ -298,7 +314,17 @@ const checkAllTrackingStatuses = async () => {
               <h1 style="color: #22c55e;">Delivered! 🎉</h1>
               <p>Hi ${order.customer_name},</p>
               <p>We've been notified that your order <b>#${order.id}</b> has been successfully delivered.</p>
-              <p>We hope you and your pet love the new jersey! If everything is perfect, we'd love it if you could share a photo with us on Instagram <b>@4puppies.cl</b></p>
+              
+              <div style="background: #f0fdf4; border: 2px dashed #22c55e; padding: 25px; border-radius: 20px; margin: 25px 0; text-align: center;">
+                <h3 style="margin-top: 0; color: #166534; text-transform: uppercase;">A GIFT FOR ${order.pet_name}! 🎁</h3>
+                <p style="font-size: 14px; color: #374151;">Don't forget! Use this code for <b>10% OFF</b> your next purchase:</p>
+                <div style="background: white; padding: 15px; border-radius: 12px; font-family: monospace; font-size: 24px; font-weight: 900; color: #166534; margin: 15px 0; border: 1px solid #dcfce7;">
+                  ${order.promo_code || 'THANKYOU10'}
+                </div>
+                <p style="font-size: 12px; color: #16a34a; font-weight: bold;">Valid for another ${daysLeft} days! 🐾</p>
+              </div>
+
+              <p>We hope you and ${order.pet_name} love the new jersey! If everything is perfect, we'd love it if you could share a photo with us on Instagram <b>@4puppies.cl</b></p>
               <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
               <p style="font-size: 11px; color: #94a3b8; text-align: center;">4PUPPIES.CL • PREMIUM PET APPAREL</p>
             </div>
@@ -684,6 +710,13 @@ app.post('/api/admin/orders/:id/deliver', async (req, res) => {
     );
     const order = result.rows[0];
     
+    // Calculate remaining days for promo
+    let daysLeft = 60;
+    if (order.promo_code_expires_at) {
+      const diff = new Date(order.promo_code_expires_at).getTime() - Date.now();
+      daysLeft = Math.max(0, Math.floor(diff / (1000 * 60 * 60 * 24)));
+    }
+
     // Send the "Delivered" email manually too
     await resend.emails.send({
       from: '4PUPPIES.CL <sales@4puppies.cl>',
@@ -695,6 +728,16 @@ app.post('/api/admin/orders/:id/deliver', async (req, res) => {
           <h1 style="color: #22c55e;">Delivered! 🎉</h1>
           <p>Hi ${order.customer_name},</p>
           <p>Your order <b>#${order.id}</b> has been delivered.</p>
+          
+          <div style="background: #f0fdf4; border: 2px dashed #22c55e; padding: 25px; border-radius: 20px; margin: 25px 0; text-align: center;">
+            <h3 style="margin-top: 0; color: #166534; text-transform: uppercase;">A GIFT FOR ${order.pet_name}! 🎁</h3>
+            <p style="font-size: 14px; color: #374151;">Don't forget! Use this code for <b>10% OFF</b> your next purchase:</p>
+            <div style="background: white; padding: 15px; border-radius: 12px; font-family: monospace; font-size: 24px; font-weight: 900; color: #166534; margin: 15px 0; border: 1px solid #dcfce7;">
+              ${order.promo_code || 'THANKYOU10'}
+            </div>
+            <p style="font-size: 12px; color: #16a34a; font-weight: bold;">Valid for another ${daysLeft} days! 🐾</p>
+          </div>
+
           <p>We hope you love the jersey! Share a photo on Instagram <b>@4puppies.cl</b> 🐾</p>
           <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
           <p style="font-size: 11px; color: #94a3b8; text-align: center;">4PUPPIES.CL</p>
