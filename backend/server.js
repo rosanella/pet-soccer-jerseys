@@ -38,7 +38,7 @@ app.post('/api/webhook', express.raw({ type: 'application/json' }), async (req, 
       const order = result.rows[0];
 
       // 2. Generate a Unique Promotion Code for the NEXT purchase (Valid for 60 days)
-      let discountCode = 'THANKYOU10'; // Fallback
+      let discountCode = 'HAPPYPET10'; // Fallback
       let expiresAt = Math.floor(Date.now() / 1000) + (60 * 24 * 60 * 60);
       try {
         const promo = await stripe.promotionCodes.create({
@@ -319,7 +319,7 @@ const checkAllTrackingStatuses = async () => {
                 <h3 style="margin-top: 0; color: #166534; text-transform: uppercase;">A GIFT FOR ${order.pet_name}! 🎁</h3>
                 <p style="font-size: 14px; color: #374151;">Don't forget! Use this code for <b>10% OFF</b> your next purchase:</p>
                 <div style="background: white; padding: 15px; border-radius: 12px; font-family: monospace; font-size: 24px; font-weight: 900; color: #166534; margin: 15px 0; border: 1px solid #dcfce7;">
-                  ${order.promo_code || 'THANKYOU10'}
+                  ${order.promo_code || 'HAPPYPET10'}
                 </div>
                 <p style="font-size: 12px; color: #16a34a; font-weight: bold;">Valid for another ${daysLeft} days! 🐾</p>
               </div>
