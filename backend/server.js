@@ -666,6 +666,11 @@ app.delete('/api/admin/orders/:id', async (req, res) => {
   }
 });
 
+app.post('/api/admin/sync-tracking', async (req, res) => {
+  try {
+    await checkAllTrackingStatuses();
+    res.json({ success: true });
+  } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
