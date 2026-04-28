@@ -959,6 +959,28 @@ const AdminOrders = ({ onBack }: { onBack: () => void }) => {
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
 
+    const isChile = order.country?.toLowerCase().includes('chile') || order.country?.toLowerCase() === 'cl' || order.country?.toLowerCase() === 'chl';
+    const logoUrl = window.location.origin + '/images/logo_4puppies.png';
+
+    const t = {
+      orderNo: isChile ? 'Pedido n.º' : 'Order No.',
+      date: isChile ? 'Fecha' : 'Date',
+      shipTo: isChile ? 'Enviar a' : 'Ship To',
+      payment: isChile ? 'Detalles del Pago' : 'Payment Details',
+      paidWith: isChile ? 'Pagado con' : 'Paid with',
+      status: isChile ? 'Estado' : 'Status',
+      items: isChile ? 'Artículos del Pedido' : 'Order Items',
+      product: isChile ? 'Producto' : 'Product',
+      size: isChile ? 'Talla' : 'Size',
+      custom: isChile ? 'Personalización' : 'Customization',
+      price: isChile ? 'Precio' : 'Price',
+      subtotal: isChile ? 'Subtotal' : 'Subtotal',
+      shipping: isChile ? 'Envío' : 'Shipping',
+      total: isChile ? 'Total del pedido' : 'Order Total',
+      thanks: isChile ? '¡Gracias por confiar en 4Puppies para vestir a tu mascota!' : 'Thank you for choosing 4Puppies for your pet!',
+      follow: isChile ? 'Síguenos en Instagram @4puppies.cl' : 'Follow us on Instagram @4puppies.cl'
+    };
+
     const html = `
       <html>
         <head>
@@ -966,8 +988,9 @@ const AdminOrders = ({ onBack }: { onBack: () => void }) => {
           <style>
             @page { size: letter; margin: 0.5in; }
             body { font-family: 'Helvetica', sans-serif; color: #333; line-height: 1.5; padding: 20px; }
-            .header { display: flex; justify-content: space-between; border-bottom: 2px solid #000; padding-bottom: 20px; margin-bottom: 30px; }
-            .shop-info h1 { margin: 0; color: #000; font-size: 28px; font-weight: 900; }
+            .header { display: flex; justify-content: space-between; align-items: start; border-bottom: 2px solid #000; padding-bottom: 20px; margin-bottom: 30px; }
+            .shop-logo { height: 70px; margin-bottom: 10px; }
+            .shop-info h1 { margin: 0; display: none; } /* Hide text if logo is there */
             .order-info { text-align: right; }
             .order-info h2 { margin: 0; font-size: 20px; }
             .sections { display: flex; gap: 50px; margin-bottom: 40px; }
@@ -984,38 +1007,38 @@ const AdminOrders = ({ onBack }: { onBack: () => void }) => {
         <body>
           <div class="header">
             <div class="shop-info">
-              <h1>4PUPPIES.CL</h1>
+              <img src="${logoUrl}" class="shop-logo" />
               <p>Custom Pet Apparel<br/>globalshop.4puppies.cl</p>
             </div>
             <div class="order-info">
-              <h2>Pedido n.º ${order.id}</h2>
-              <p>Fecha: ${new Date(order.created_at).toLocaleDateString()}</p>
+              <h2>${t.orderNo} ${order.id}</h2>
+              <p>${t.date}: ${new Date(order.created_at).toLocaleDateString()}</p>
             </div>
           </div>
 
           <div class="sections">
             <div style="flex: 1;">
-              <div class="section-title">Enviar a:</div>
+              <div class="section-title">${t.shipTo}:</div>
               <p><strong>${order.customer_name}</strong><br/>
               ${order.address}<br/>
               ${order.city}, ${order.region} ${order.zipcode || ''}<br/>
               ${order.country}</p>
             </div>
             <div style="flex: 1;">
-              <div class="section-title">Detalles del Pago:</div>
-              <p>Pagado con: Stripe Checkout<br/>
-              Estado: ${order.status.toUpperCase()}</p>
+              <div class="section-title">${t.payment}:</div>
+              <p>${t.paidWith}: Stripe Checkout<br/>
+              ${t.status}: ${order.status.toUpperCase()}</p>
             </div>
           </div>
 
-          <div class="section-title">Artículos del Pedido</div>
+          <div class="section-title">${t.items}</div>
           <table class="items-table">
             <thead>
               <tr>
-                <th>Producto</th>
-                <th>Talla</th>
-                <th>Personalización</th>
-                <th style="text-align: right;">Precio</th>
+                <th>${t.product}</th>
+                <th>${t.size}</th>
+                <th>${t.custom}</th>
+                <th style="text-align: right;">${t.price}</th>
               </tr>
             </thead>
             <tbody>
@@ -1029,14 +1052,14 @@ const AdminOrders = ({ onBack }: { onBack: () => void }) => {
           </table>
 
           <div class="totals">
-            <div class="total-row"><span>Subtotal:</span> <span>USD ${order.total}</span></div>
-            <div class="total-row"><span>Envío:</span> <span>USD 0.00</span></div>
-            <div class="total-row grand-total"><span>Total del pedido:</span> <span>USD ${order.total}</span></div>
+            <div class="total-row"><span>${t.subtotal}:</span> <span>USD ${order.total}</span></div>
+            <div class="total-row"><span>${t.shipping}:</span> <span>USD 0.00</span></div>
+            <div class="total-row grand-total"><span>${t.total}:</span> <span>USD ${order.total}</span></div>
           </div>
 
           <div class="footer">
-            <p>¡Gracias por confiar en 4Puppies para vestir a tu mascota!<br/>
-            Síguenos en Instagram @4puppies.cl</p>
+            <p>${t.thanks}<br/>
+            ${t.follow}</p>
           </div>
         </body>
       </html>
@@ -1044,70 +1067,68 @@ const AdminOrders = ({ onBack }: { onBack: () => void }) => {
 
     printWindow.document.write(html);
     printWindow.document.close();
-    printWindow.print();
+    // Wait for image to load before printing
+    const img = printWindow.document.querySelector('img');
+    if (img) {
+      img.onload = () => printWindow.print();
+    } else {
+      printWindow.print();
+    }
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 p-6">
-      <div className="max-w-6xl mx-auto space-y-8">
-        <div className="flex flex-col md:flex-row justify-between items-center bg-white p-6 rounded-[2rem] shadow-sm gap-4">
-          <div>
-            <h1 className="text-3xl font-black uppercase tracking-tighter flex items-center gap-3">
-              <Truck className="text-blue-600" size={32} /> Order <span className="text-blue-600">Fulfillment</span>
-            </h1>
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Manage sales & FedEx tracking</p>
+    <div className="min-h-screen bg-slate-50 p-4 md:p-10">
+      <div className="max-w-7xl mx-auto space-y-10">
+        <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center bg-white p-6 md:p-8 rounded-[2.5rem] shadow-sm gap-6 border border-gray-100">
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 bg-blue-600 rounded-3xl flex items-center justify-center text-white shadow-xl shadow-blue-100">
+               <Truck size={32} />
+            </div>
+            <div>
+              <h1 className="text-3xl font-black uppercase tracking-tighter leading-none flex items-center gap-2">
+                Order <span className="text-blue-600">Fulfillment</span>
+              </h1>
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Manage sales & FedEx tracking</p>
+            </div>
           </div>
           
-          <div className="flex bg-slate-100 p-1 rounded-xl">
-            <button 
-              onClick={() => setActiveTab('paid')}
-              className={`px-6 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'paid' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
-            >
-              Paid
-            </button>
-            <button 
-              onClick={() => setActiveTab('shipped')}
-              className={`px-6 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'shipped' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
-            >
-              Shipped
-            </button>
-            <button 
-              onClick={() => setActiveTab('delivered')}
-              className={`px-6 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'delivered' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
-            >
-              Delivered
-            </button>
-            <button 
-              onClick={() => setActiveTab('abandoned')}
-              className={`px-6 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'abandoned' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
-            >
-              Abandoned
-            </button>
-          </div>
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full xl:w-auto">
+            <div className="flex bg-slate-100 p-1 rounded-2xl flex-grow sm:flex-grow-0">
+              {['paid', 'shipped', 'delivered', 'abandoned'].map((tab) => (
+                <button 
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`px-4 md:px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === tab ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                >
+                  {tab}
+                </button>
+              ))}
+            </div>
 
-          <div className="flex gap-4">
-            <button 
-              onClick={async () => {
-                const btn = document.activeElement as HTMLButtonElement;
-                if (btn) btn.disabled = true;
-                try {
-                  await fetch('/api/admin/sync-tracking', { method: 'POST' });
-                  alert("FedEx sync complete! Emails sent if items were delivered. 🚚");
-                  fetchOrders();
-                } catch (e) {
-                  alert("Sync failed");
-                } finally {
-                  if (btn) btn.disabled = false;
-                }
-              }}
-              className="bg-white border-2 border-slate-100 text-slate-600 px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all flex items-center gap-2"
-            >
-              <RefreshCcw size={14} /> Sync FedEx Status
-            </button>
-            <button onClick={() => setManualOrderOpen(true)} className="bg-blue-600 text-white px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all flex items-center gap-2">
-              <FileText size={14} /> Custom Sale
-            </button>
-            <button onClick={onBack} className="bg-slate-900 text-white px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all">Back to Site</button>
+            <div className="flex flex-wrap gap-3">
+              <button 
+                onClick={async () => {
+                  const btn = document.activeElement as HTMLButtonElement;
+                  if (btn) btn.disabled = true;
+                  try {
+                    await fetch('/api/admin/sync-tracking', { method: 'POST' });
+                    alert("FedEx sync complete! Emails sent if items were delivered. 🚚");
+                    fetchOrders();
+                  } catch (e) {
+                    alert("Sync failed");
+                  } finally {
+                    if (btn) btn.disabled = false;
+                  }
+                }}
+                className="bg-white border-2 border-slate-50 text-slate-600 px-5 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all flex items-center gap-2 shadow-sm"
+              >
+                <RefreshCcw size={14} /> Sync Status
+              </button>
+              <button onClick={() => setManualOrderOpen(true)} className="bg-blue-600 text-white px-5 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all flex items-center gap-2 shadow-lg shadow-blue-100">
+                <FileText size={14} /> Custom
+              </button>
+              <button onClick={onBack} className="bg-slate-900 text-white px-5 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all shadow-lg shadow-slate-200">Exit</button>
+            </div>
           </div>
         </div>
 
