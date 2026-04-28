@@ -276,7 +276,12 @@ const checkAllTrackingStatuses = async () => {
       const data = await response.json();
       const trackInfo = data.data?.[0];
       
-      if (trackInfo && (trackInfo.status === 'delivered' || trackInfo.status?.toLowerCase() === 'entregado')) {
+      console.log(`Envia Tracking for Order #${order.id} (${order.tracking_number}):`, trackInfo?.status);
+
+      const status = trackInfo?.status?.toLowerCase()?.trim();
+      const isDelivered = status === 'delivered' || status === 'entregado' || status === 'delivered.' || status === 'entregado.';
+      
+      if (trackInfo && isDelivered) {
         await pool.query(
           "UPDATE orders SET status = 'delivered', delivered_at = CURRENT_TIMESTAMP WHERE id = $1",
           [order.id]
