@@ -661,12 +661,41 @@ app.delete('/api/admin/orders/:id', async (req, res) => {
   }
 });
 
-app.post('/api/admin/sync-tracking', async (req, res) => {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/admin/orders/:id/deliver', async (req, res) => {
+  const { id } = req.params;
   try {
-    await checkAllTrackingStatuses();
+    const result = await pool.query(
+      "UPDATE orders SET status = 'delivered', delivered_at = CURRENT_TIMESTAMP WHERE id = $1 RETURNING *",
+      [id]
+    );
+    const order = result.rows[0];
+    
+    // Send the "Delivered" email manually too
+    await resend.emails.send({
+      from: '4PUPPIES.CL <sales@4puppies.cl>',
+      to: order.email,
+      bcc: 'sales@4puppies.cl',
+      subject: `It's here! 🐾 Your 4Puppies order has been delivered`,
+      html: `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 20px;">
+          <h1 style="color: #22c55e;">Delivered! 🎉</h1>
+          <p>Hi ${order.customer_name},</p>
+          <p>Your order <b>#${order.id}</b> has been delivered.</p>
+          <p>We hope you love the jersey! Share a photo on Instagram <b>@4puppies.cl</b> 🐾</p>
+          <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
+          <p style="font-size: 11px; color: #94a3b8; text-align: center;">4PUPPIES.CL</p>
+        </div>
+      `
+    });
+
     res.json({ success: true });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('Manual Delivery Error:', error);
+    res.status(500).json({ error: 'Error marking as delivered' });
   }
 });
 

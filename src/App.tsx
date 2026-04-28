@@ -17,7 +17,8 @@ import {
   Search,
   FileText,
   ExternalLink,
-  RefreshCcw
+  RefreshCcw,
+  Package
 } from 'lucide-react';
 
 const PRICING_TABLE: Record<string, number> = {
@@ -1109,6 +1110,27 @@ const AdminOrders = ({ onBack }: { onBack: () => void }) => {
                         View on FedEx <ExternalLink size={12} />
                       </a>
                     )}
+                    {order.status === 'shipped' && (
+                      <button 
+                        onClick={async () => {
+                          if (confirm("Mark as DELIVERED manually and send confirmation email? 🐾")) {
+                            await fetch(`/api/admin/orders/${order.id}/deliver`, { method: 'POST' });
+                            fetchOrders();
+                          }
+                        }}
+                        className="w-full bg-green-50 text-green-600 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-green-100 transition-all flex items-center justify-center gap-2"
+                      >
+                        <Check size={14} strokeWidth={3} /> Mark Delivered
+                      </button>
+                    )}
+                  </div>
+                )}
+                {order.status === 'delivered' && (
+                  <div className="lg:w-80 flex flex-col justify-center gap-4 bg-slate-50 p-6 rounded-[2rem]">
+                    <div className="w-full bg-slate-200 text-slate-500 py-4 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 cursor-default">
+                      <Package size={16} /> Order Completed
+                    </div>
+                    <p className="text-[9px] font-bold text-slate-400 text-center uppercase">Delivered at {order.delivered_at ? new Date(order.delivered_at).toLocaleDateString() : 'N/A'}</p>
                   </div>
                 )}
               </div>
