@@ -981,6 +981,9 @@ const AdminOrders = ({ onBack }: { onBack: () => void }) => {
       follow: isChile ? 'Síguenos en Instagram @4puppies.cl' : 'Follow us on Instagram @4puppies.cl'
     };
 
+    const product = PRODUCTS.find(p => p.name === order.product_name);
+    const productImage = product ? window.location.origin + product.images[0] : '';
+
     const html = `
       <html>
         <head>
@@ -990,14 +993,16 @@ const AdminOrders = ({ onBack }: { onBack: () => void }) => {
             body { font-family: 'Helvetica', sans-serif; color: #333; line-height: 1.5; padding: 20px; }
             .header { display: flex; justify-content: space-between; align-items: start; border-bottom: 2px solid #000; padding-bottom: 20px; margin-bottom: 30px; }
             .shop-logo { height: 70px; margin-bottom: 10px; }
-            .shop-info h1 { margin: 0; display: none; } /* Hide text if logo is there */
+            .shop-info h1 { margin: 0; display: none; }
             .order-info { text-align: right; }
             .order-info h2 { margin: 0; font-size: 20px; }
             .sections { display: flex; gap: 50px; margin-bottom: 40px; }
             .section-title { font-weight: bold; text-transform: uppercase; font-size: 12px; color: #666; margin-bottom: 10px; border-bottom: 1px solid #eee; }
             .items-table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
             .items-table th { text-align: left; background: #f9f9f9; padding: 10px; font-size: 12px; border-bottom: 1px solid #ddd; }
-            .items-table td { padding: 15px 10px; border-bottom: 1px solid #eee; font-size: 14px; }
+            .items-table td { padding: 15px 10px; border-bottom: 1px solid #eee; font-size: 14px; vertical-align: middle; }
+            .product-cell { display: flex; items-center; gap: 15px; }
+            .product-img { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; border: 1px solid #eee; }
             .totals { margin-left: auto; width: 250px; }
             .total-row { display: flex; justify-content: space-between; padding: 5px 0; }
             .grand-total { border-top: 2px solid #000; margin-top: 10px; padding-top: 10px; font-weight: bold; font-size: 18px; }
@@ -1043,7 +1048,12 @@ const AdminOrders = ({ onBack }: { onBack: () => void }) => {
             </thead>
             <tbody>
               <tr>
-                <td><strong>${order.product_name}</strong></td>
+                <td>
+                  <div class="product-cell">
+                    ${productImage ? `<img src="${productImage}" class="product-img" />` : ''}
+                    <strong>${order.product_name}</strong>
+                  </div>
+                </td>
                 <td>${order.size_key}</td>
                 <td>${order.pet_name} / ${order.pet_number || '0'}</td>
                 <td style="text-align: right;">USD ${order.total}</td>
@@ -1067,12 +1077,21 @@ const AdminOrders = ({ onBack }: { onBack: () => void }) => {
 
     printWindow.document.write(html);
     printWindow.document.close();
-    // Wait for image to load before printing
-    const img = printWindow.document.querySelector('img');
-    if (img) {
-      img.onload = () => printWindow.print();
-    } else {
+    
+    // Wait for all images to load before printing
+    const images = printWindow.document.querySelectorAll('img');
+    let loadedCount = 0;
+    if (images.length === 0) {
       printWindow.print();
+    } else {
+      images.forEach(img => {
+        img.onload = img.onerror = () => {
+          loadedCount++;
+          if (loadedCount === images.length) {
+            printWindow.print();
+          }
+        };
+      });
     }
   };
 
