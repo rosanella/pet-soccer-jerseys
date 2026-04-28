@@ -1001,7 +1001,7 @@ const AdminOrders = ({ onBack }: { onBack: () => void }) => {
             .items-table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
             .items-table th { text-align: left; background: #f9f9f9; padding: 10px; font-size: 12px; border-bottom: 1px solid #ddd; }
             .items-table td { padding: 15px 10px; border-bottom: 1px solid #eee; font-size: 14px; vertical-align: middle; }
-            .product-cell { display: flex; items-center; gap: 15px; }
+            .product-cell { display: flex; align-items: center; gap: 15px; }
             .product-img { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; border: 1px solid #eee; }
             .totals { margin-left: auto; width: 250px; }
             .total-row { display: flex; justify-content: space-between; padding: 5px 0; }
