@@ -1056,15 +1056,15 @@ const AdminOrders = ({ onBack }: { onBack: () => void }) => {
                 </td>
                 <td>${order.size_key}</td>
                 <td>${order.pet_name} / ${order.pet_number || '0'}</td>
-                <td style="text-align: right;">USD ${order.total}</td>
+                <td style="text-align: right;">USD ${Number(order.total).toFixed(2)}</td>
               </tr>
             </tbody>
           </table>
 
           <div class="totals">
-            <div class="total-row"><span>${t.subtotal}:</span> <span>USD ${order.total}</span></div>
+            <div class="total-row"><span>${t.subtotal}:</span> <span>USD ${Number(order.total).toFixed(2)}</span></div>
             <div class="total-row"><span>${t.shipping}:</span> <span>USD 0.00</span></div>
-            <div class="total-row grand-total"><span>${t.total}:</span> <span>USD ${order.total}</span></div>
+            <div class="total-row grand-total"><span>${t.total}:</span> <span>USD ${Number(order.total).toFixed(2)}</span></div>
           </div>
 
           <div class="footer">
