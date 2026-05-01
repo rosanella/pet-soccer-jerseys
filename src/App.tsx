@@ -146,7 +146,7 @@ const SizeGuideModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => v
               <div className="space-y-3">
                 <h4 className="text-[10px] font-black uppercase text-blue-600 tracking-widest border-b border-blue-100 pb-2 flex items-center gap-2">
                   <div className="w-1.5 h-1.5 bg-blue-600 rounded-full"></div> 
-                  {unit === 'inches' ? 'Largo / Length' : 'Largo:'}
+                  {unit === 'inches' ? 'Length' : 'Largo:'}
                 </h4>
                 <p className="text-[11px] font-bold text-slate-600 leading-relaxed">
                   {unit === 'inches' 
@@ -158,7 +158,7 @@ const SizeGuideModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => v
               <div className="space-y-3">
                 <h4 className="text-[10px] font-black uppercase text-blue-600 tracking-widest border-b border-blue-100 pb-2 flex items-center gap-2">
                   <div className="w-1.5 h-1.5 bg-blue-600 rounded-full"></div> 
-                  {unit === 'inches' ? 'Pecho / Chest' : 'Pecho:'}
+                  {unit === 'inches' ? 'Chest' : 'Pecho:'}
                 </h4>
                 <p className="text-[11px] font-bold text-slate-600 leading-relaxed">
                   {unit === 'inches' 
@@ -170,7 +170,7 @@ const SizeGuideModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => v
               <div className="space-y-3">
                 <h4 className="text-[10px] font-black uppercase text-blue-600 tracking-widest border-b border-blue-100 pb-2 flex items-center gap-2">
                   <div className="w-1.5 h-1.5 bg-blue-600 rounded-full"></div> 
-                  {unit === 'inches' ? 'Cuello / Neck' : 'Cuello:'}
+                  {unit === 'inches' ? 'Neck' : 'Cuello:'}
                 </h4>
                 <p className="text-[11px] font-bold text-slate-600 leading-relaxed">
                   {unit === 'inches' 
