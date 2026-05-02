@@ -707,7 +707,7 @@ const AllReviewsModal = ({ isOpen, onClose, reviews, onZoom }: { isOpen: boolean
   );
 };
 
-const ManualOrderModal = ({ isOpen, onClose, onRefresh }: { isOpen: boolean, onClose: () => void, onRefresh: () => void }) => {
+const ManualOrderModal = ({ isOpen, onClose, onRefresh, adminPassword }: { isOpen: boolean, onClose: () => void, onRefresh: () => void, adminPassword: string }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [statusMessage, setStatusMessage] = useState<{type: 'success' | 'error', link?: string} | null>(null);
   const [formData, setFormData] = useState({
@@ -748,7 +748,10 @@ const ManualOrderModal = ({ isOpen, onClose, onRefresh }: { isOpen: boolean, onC
 
       const resp = await fetch('/api/admin/create-manual-order', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-admin-password': adminPassword
+        },
         body: JSON.stringify({
           ...formData,
           productName: combinedProducts,
@@ -901,7 +904,7 @@ const ManualOrderModal = ({ isOpen, onClose, onRefresh }: { isOpen: boolean, onC
   );
 };
 
-const AdminOrders = ({ onBack }: { onBack: () => void }) => {
+const AdminOrders = ({ onBack, adminPassword }: { onBack: () => void, adminPassword: string }) => {
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'paid' | 'shipped' | 'delivered' | 'abandoned'>('paid');
@@ -910,7 +913,14 @@ const AdminOrders = ({ onBack }: { onBack: () => void }) => {
 
   const fetchOrders = async () => {
     try {
-      const resp = await fetch('/api/admin/orders');
+      const resp = await fetch('/api/admin/orders', {
+        headers: { 'x-admin-password': adminPassword }
+      });
+      if (resp.status === 401) {
+        localStorage.removeItem('4p_admin_pass');
+        window.location.reload();
+        return;
+      }
       const data = await resp.json();
       setOrders(data);
     } catch (error) {
@@ -946,7 +956,10 @@ const AdminOrders = ({ onBack }: { onBack: () => void }) => {
   const handleDeleteOrder = async (id: number) => {
     if (!confirm("Are you sure you want to delete this order? This action cannot be undone. ⚠️")) return;
     try {
-      const resp = await fetch(`/api/admin/orders/${id}`, { method: 'DELETE' });
+      const resp = await fetch(`/api/admin/orders/${id}`, { 
+        method: 'DELETE',
+        headers: { 'x-admin-password': adminPassword }
+      });
       if (resp.ok) {
         fetchOrders();
       }
@@ -1130,7 +1143,10 @@ const AdminOrders = ({ onBack }: { onBack: () => void }) => {
                   const btn = document.activeElement as HTMLButtonElement;
                   if (btn) btn.disabled = true;
                   try {
-                    await fetch('/api/admin/sync-tracking', { method: 'POST' });
+                    await fetch('/api/admin/sync-tracking', { 
+                      method: 'POST',
+                      headers: { 'x-admin-password': adminPassword }
+                    });
                     alert("FedEx sync complete! Emails sent if items were delivered. 🚚");
                     fetchOrders();
                   } catch (e) {
@@ -1151,7 +1167,12 @@ const AdminOrders = ({ onBack }: { onBack: () => void }) => {
           </div>
         </div>
 
-        <ManualOrderModal isOpen={manualOrderOpen} onClose={() => setManualOrderOpen(false)} onRefresh={fetchOrders} />
+        <ManualOrderModal 
+          isOpen={manualOrderOpen} 
+          onClose={() => setManualOrderOpen(false)} 
+          onRefresh={fetchOrders} 
+          adminPassword={adminPassword}
+        />
 
         {loading ? <p className="text-center py-20 font-bold text-gray-400">Loading orders...</p> : (
           <div className="grid gap-6">
@@ -1256,7 +1277,10 @@ const AdminOrders = ({ onBack }: { onBack: () => void }) => {
                       <button 
                         onClick={async () => {
                           if (confirm("Mark as DELIVERED manually and send confirmation email? 🐾")) {
-                            await fetch(`/api/admin/orders/${order.id}/deliver`, { method: 'POST' });
+                            await fetch(`/api/admin/orders/${order.id}/deliver`, { 
+                              method: 'POST',
+                              headers: { 'x-admin-password': adminPassword }
+                            });
                             fetchOrders();
                           }
                         }}
@@ -1284,13 +1308,16 @@ const AdminOrders = ({ onBack }: { onBack: () => void }) => {
   );
 };
 
-const AdminReviews = ({ onBack }: { onBack: () => void }) => {
+const AdminReviews = ({ onBack, adminPassword }: { onBack: () => void, adminPassword: string }) => {
   const [reviews, setReviews] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchAllReviews = async () => {
     try {
-      const resp = await fetch('/api/reviews/all'); // Need to add this endpoint
+      const resp = await fetch('/api/reviews/all', {
+        headers: { 'x-admin-password': adminPassword }
+      });
+      if (resp.status === 401) return onBack();
       const data = await resp.json();
       setReviews(data);
     } catch (error) {
@@ -1305,13 +1332,19 @@ const AdminReviews = ({ onBack }: { onBack: () => void }) => {
   }, []);
 
   const approveReview = async (id: number) => {
-    await fetch(`/api/reviews/${id}/approve`, { method: 'POST' });
+    await fetch(`/api/reviews/${id}/approve`, { 
+      method: 'POST',
+      headers: { 'x-admin-password': adminPassword }
+    });
     fetchAllReviews();
   };
 
   const deleteReview = async (id: number) => {
     if (confirm("Delete this review?")) {
-      await fetch(`/api/reviews/${id}`, { method: 'DELETE' });
+      await fetch(`/api/reviews/${id}`, { 
+        method: 'DELETE',
+        headers: { 'x-admin-password': adminPassword }
+      });
       fetchAllReviews();
     }
   };
@@ -1410,8 +1443,46 @@ export default function App() {
     setCheckoutModalOpen(true);
   };
 
-  if (adminView === 'reviews') return <AdminReviews onBack={() => navigateTo('/')} />;
-  if (adminView === 'orders') return <AdminOrders onBack={() => navigateTo('/')} />;
+  const [adminPassword, setAdminPassword] = useState<string>(localStorage.getItem('4p_admin_pass') || '');
+
+  const handleAdminLogin = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const pass = (e.currentTarget.elements.namedItem('password') as HTMLInputElement).value;
+    setAdminPassword(pass);
+    localStorage.setItem('4p_admin_pass', pass);
+  };
+
+  const AdminLogin = () => (
+    <div className="min-h-screen bg-slate-900 flex items-center justify-center p-6">
+      <form onSubmit={handleAdminLogin} className="bg-white p-10 rounded-[3rem] shadow-2xl max-w-sm w-full space-y-6 text-center">
+        <div className="w-20 h-20 bg-blue-600 rounded-3xl mx-auto flex items-center justify-center text-white shadow-xl shadow-blue-200">
+           <ShieldCheck size={40} />
+        </div>
+        <div>
+          <h2 className="text-2xl font-black uppercase tracking-tighter">Store <span className="text-blue-600">Access</span></h2>
+          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Enter your admin password</p>
+        </div>
+        <input 
+          name="password" 
+          type="password" 
+          placeholder="Password" 
+          autoFocus
+          className="w-full bg-slate-100 border-2 border-transparent p-4 rounded-2xl text-center font-black focus:border-blue-600 outline-none transition-all"
+        />
+        <button className="w-full bg-slate-900 text-white font-black py-4 rounded-2xl uppercase tracking-widest hover:bg-black transition-all">Verify</button>
+        <button type="button" onClick={() => navigateTo('/')} className="text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-slate-900 transition-all">Cancel</button>
+      </form>
+    </div>
+  );
+
+  if (adminView === 'reviews') {
+    if (!adminPassword) return <AdminLogin />;
+    return <AdminReviews onBack={() => navigateTo('/')} adminPassword={adminPassword} />;
+  }
+  if (adminView === 'orders') {
+    if (!adminPassword) return <AdminLogin />;
+    return <AdminOrders onBack={() => navigateTo('/')} adminPassword={adminPassword} />;
+  }
 
   if (adminView === 'success') {
     return (

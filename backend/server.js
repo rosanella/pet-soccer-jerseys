@@ -497,6 +497,17 @@ app.post('/api/create-checkout-session', async (req, res) => {
   }
 });
 
+// Admin Protection Middleware
+const adminAuth = (req, res, next) => {
+  const password = req.headers['x-admin-password'];
+  const ADMIN_PASS = process.env.ADMIN_PASSWORD || '4Puppies2026';
+  if (password === ADMIN_PASS) {
+    next();
+  } else {
+    res.status(401).json({ error: 'Unauthorized' });
+  }
+};
+
 // Reviews Endpoints
 app.post('/api/reviews', upload.single('image'), async (req, res) => {
   const { customerName, comment, stars } = req.body;
@@ -523,7 +534,7 @@ app.post('/api/reviews', upload.single('image'), async (req, res) => {
   }
 });
 
-app.get('/api/reviews/all', async (req, res) => {
+app.get('/api/reviews/all', adminAuth, async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM reviews ORDER BY created_at DESC');
     res.json(result.rows);
@@ -544,7 +555,7 @@ app.get('/api/reviews', async (req, res) => {
 });
 
 // Admin Review Management (Password protected or internal)
-app.post('/api/reviews/:id/approve', async (req, res) => {
+app.post('/api/reviews/:id/approve', adminAuth, async (req, res) => {
   const { id } = req.params;
   try {
     await pool.query('UPDATE reviews SET status = $1 WHERE id = $2', ['approved', id]);
@@ -554,7 +565,7 @@ app.post('/api/reviews/:id/approve', async (req, res) => {
   }
 });
 
-app.delete('/api/reviews/:id', async (req, res) => {
+app.delete('/api/reviews/:id', adminAuth, async (req, res) => {
   const { id } = req.params;
   try {
     await pool.query('DELETE FROM reviews WHERE id = $1', [id]);
@@ -565,7 +576,7 @@ app.delete('/api/reviews/:id', async (req, res) => {
 });
 
 // Admin Order Management
-app.get('/api/admin/orders', async (req, res) => {
+app.get('/api/admin/orders', adminAuth, async (req, res) => {
   try {
     const result = await pool.query("SELECT * FROM orders ORDER BY created_at DESC");
     res.json(result.rows);
@@ -575,7 +586,7 @@ app.get('/api/admin/orders', async (req, res) => {
   }
 });
 
-app.post('/api/admin/create-manual-order', async (req, res) => {
+app.post('/api/admin/create-manual-order', adminAuth, async (req, res) => {
   const { 
     customerName, email, phone, address, city, region, zipcode, country, 
     productName, petName, petNumber, sizeKey, total, paymentMethod 
@@ -625,7 +636,7 @@ app.post('/api/admin/create-manual-order', async (req, res) => {
   }
 });
 
-app.post('/api/admin/orders/:id/track', async (req, res) => {
+app.post('/api/admin/orders/:id/track', adminAuth, async (req, res) => {
   const { id } = req.params;
   const { trackingNumber } = req.body;
 
@@ -681,7 +692,7 @@ app.post('/api/admin/orders/:id/track', async (req, res) => {
   }
 });
 
-app.delete('/api/admin/orders/:id', async (req, res) => {
+app.delete('/api/admin/orders/:id', adminAuth, async (req, res) => {
   const { id } = req.params;
   try {
     await pool.query('DELETE FROM orders WHERE id = $1', [id]);
@@ -692,7 +703,7 @@ app.delete('/api/admin/orders/:id', async (req, res) => {
   }
 });
 
-app.post('/api/admin/sync-tracking', async (req, res) => {
+app.post('/api/admin/sync-tracking', adminAuth, async (req, res) => {
   try {
     await checkAllTrackingStatuses();
     res.json({ success: true });
@@ -701,7 +712,7 @@ app.post('/api/admin/sync-tracking', async (req, res) => {
   }
 });
 
-app.post('/api/admin/orders/:id/deliver', async (req, res) => {
+app.post('/api/admin/orders/:id/deliver', adminAuth, async (req, res) => {
   const { id } = req.params;
   try {
     const result = await pool.query(
