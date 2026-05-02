@@ -37,7 +37,7 @@ const PRICING_TABLE: Record<string, number> = {
 const SIZES = ["XS", "S", "M", "L", "XL", "2XL", "3XL", "4XL", "5XL"];
 
 const PRODUCTS = [
-  { id: 1, name: "USA 2026 Edition", description: "Home jersey for American pups.", images: ["/images/usa_front.jpg", "/images/usa_back.jpg"] },
+  { id: 1, name: "USA 2026 Edition", description: "Home jersey for American pups.", images: ["/images/usa_front.jpg?v=2", "/images/usa_back.jpg?v=2"] },
   { id: 2, name: "Mexico 2026 Jersey", description: "Vibrant host nation jersey.", images: ["/images/mexico_front.jpg", "/images/mexico_back.jpg"] },
   { id: 3, name: "Canada 2026 Jersey", description: "Northern host team style.", images: ["/images/canada_pet_jersey.jpg", "/images/canada_pet_jersey.jpg"] },
   { id: 4, name: "Argentina Champion", description: "The iconic albiceleste stripes.", images: ["/images/argentina_front.jpg", "/images/argentina_back.jpg"] },
