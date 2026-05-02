@@ -1607,12 +1607,26 @@ export default function App() {
             <span>© 2026 4PUPPIES.CL</span>
             <span>SANTIAGO, CHILE</span>
             <span>EXPRESS DELIVERY TO USA</span>
-            <button 
-              onClick={() => setTermsModalOpen(true)}
-              className="mt-4 text-blue-600 hover:text-blue-700 underline font-black transition-colors"
-            >
-              TERMS & CONDITIONS • SHIPPING POLICY
-            </button>
+            <div className="mt-8 flex flex-wrap justify-center gap-6">
+              <button 
+                onClick={() => setTermsModalOpen(true)}
+                className="text-blue-600 hover:text-blue-700 underline font-black transition-colors"
+              >
+                TERMS & CONDITIONS • SHIPPING POLICY
+              </button>
+              <button 
+                onClick={() => navigateTo('/admin-orders')}
+                className="text-slate-400 hover:text-slate-900 underline font-black transition-colors"
+              >
+                ORDER MANAGEMENT
+              </button>
+              <button 
+                onClick={() => navigateTo('/admin-reviews')}
+                className="text-slate-400 hover:text-slate-900 underline font-black transition-colors"
+              >
+                REVIEW MODERATION
+              </button>
+            </div>
             <span className="mt-4 text-[9px] opacity-70">NOT AFFILIATED WITH FIFA. ALL DESIGNS ARE CUSTOM FAN ART.</span>
           </p>
         </div>
