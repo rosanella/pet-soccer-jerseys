@@ -37,13 +37,13 @@ const PRICING_TABLE: Record<string, number> = {
 const SIZES = ["XS", "S", "M", "L", "XL", "2XL", "3XL", "4XL", "5XL"];
 
 const PRODUCTS = [
-  { id: 1, name: "USA 2026 Edition", description: "Home jersey for American pups.", images: ["/images/usa_front.jpg?v=1835", "/images/usa_back.jpg?v=1835"] },
+  { id: 1, name: "USA 2026 Edition", description: "Home jersey for American pups.", images: ["/images/usa_front.jpg", "/images/usa_back.jpg"] },
   { id: 2, name: "Mexico 2026 Jersey", description: "Vibrant host nation jersey.", images: ["/images/mexico_front.jpg", "/images/mexico_back.jpg"] },
-  { id: 3, name: "Canada 2026 Jersey", description: "Northern host team style.", images: ["/images/canada_pet_jersey.jpg", "/images/canada_pet_jersey.jpg"] },
+  { id: 3, name: "Canada 2026 Jersey", description: "Northern host team style.", images: ["/images/canada_front.jpg", "/images/canada_back.jpg"] },
   { id: 4, name: "Argentina Champion", description: "The iconic albiceleste stripes.", images: ["/images/argentina_front.jpg", "/images/argentina_back.jpg"] },
-  { id: 5, name: "Brazil Canary", description: "The most legendary soccer yellow.", images: ["/images/brazil_pet_jersey.jpg", "/images/brazil_pet_jersey.jpg"] },
+  { id: 5, name: "Japan Samurai Blue", description: "Sleek and legendary design.", images: ["/images/japan_front.jpg", "/images/japan_back.jpg"] },
   { id: 6, name: "Colombia El Tricolor", description: "The vibrant yellow of South American sun.", images: ["/images/colombia_front.jpg", "/images/colombia_back.jpg"] },
-  { id: 7, name: "England Lionheart", description: "Support the Three Lions.", images: ["/images/england_pet_jersey.jpg", "/images/england_pet_jersey.jpg"] },
+  { id: 7, name: "England Lionheart", description: "Support the Three Lions.", images: ["/images/england_front.jpg", "/images/england_back.jpg"] },
   { id: 8, name: "Spain La Roja", description: "The powerful red of Spain.", images: ["/images/spain_front.jpg", "/images/spain_back.jpg"] },
 ];
 
