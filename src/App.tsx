@@ -37,14 +37,14 @@ const PRICING_TABLE: Record<string, number> = {
 const SIZES = ["XS", "S", "M", "L", "XL", "2XL", "3XL", "4XL", "5XL"];
 
 const PRODUCTS = [
-  { id: 1, name: "USA 2026 Edition", description: "Home jersey for American pups.", images: ["/images/usa_front.jpg", "/images/usa_back.jpg"] },
-  { id: 2, name: "Mexico 2026 Jersey", description: "Vibrant host nation jersey.", images: ["/images/mexico_front.jpg", "/images/mexico_back.jpg"] },
-  { id: 3, name: "Canada 2026 Jersey", description: "Northern host team style.", images: ["/images/canada_front.jpg", "/images/canada_back.jpg"] },
-  { id: 4, name: "Argentina Champion", description: "The iconic albiceleste stripes.", images: ["/images/argentina_front.jpg", "/images/argentina_back.jpg"] },
-  { id: 5, name: "Japan Samurai Blue", description: "Sleek and legendary design.", images: ["/images/japan_front.jpg", "/images/japan_back.jpg"] },
-  { id: 6, name: "Colombia El Tricolor", description: "The vibrant yellow of South American sun.", images: ["/images/colombia_front.jpg", "/images/colombia_back.jpg"] },
-  { id: 7, name: "England Lionheart", description: "Support the Three Lions.", images: ["/images/england_front.jpg", "/images/england_back.jpg"] },
-  { id: 8, name: "Spain La Roja", description: "The powerful red of Spain.", images: ["/images/spain_front.jpg", "/images/spain_back.jpg"] },
+  { id: 1, name: "USA 2026 Edition", slug: "usa", description: "Home jersey for American pups.", images: ["/images/usa_front.jpg", "/images/usa_back.jpg"] },
+  { id: 2, name: "Mexico 2026 Jersey", slug: "mexico", description: "Vibrant host nation jersey.", images: ["/images/mexico_front.jpg", "/images/mexico_back.jpg"] },
+  { id: 3, name: "Canada 2026 Jersey", slug: "canada", description: "Northern host team style.", images: ["/images/canada_front.jpg?v=2", "/images/canada_back.jpg?v=2"] },
+  { id: 4, name: "Argentina Champion", slug: "argentina", description: "The iconic albiceleste stripes.", images: ["/images/argentina_front.jpg", "/images/argentina_back.jpg"] },
+  { id: 5, name: "Japan Samurai Blue", slug: "japan", description: "Sleek and legendary design.", images: ["/images/japan_front.jpg?v=2", "/images/japan_back.jpg?v=2"] },
+  { id: 6, name: "Colombia El Tricolor", slug: "colombia", description: "The vibrant yellow of South American sun.", images: ["/images/colombia_front.jpg", "/images/colombia_back.jpg"] },
+  { id: 7, name: "England Lionheart", slug: "england", description: "Support the Three Lions.", images: ["/images/england_front.jpg?v=2", "/images/england_back.jpg?v=2"] },
+  { id: 8, name: "Spain La Roja", slug: "spain", description: "The powerful red of Spain.", images: ["/images/spain_front.jpg", "/images/spain_back.jpg"] },
 ];
 
 const Header = () => (
@@ -1407,14 +1407,31 @@ export default function App() {
 
   useEffect(() => {
     fetchReviews();
-    // Handle URL changes
+    // Handle URL changes and Anchors
     const handlePopState = () => {
       const path = window.location.pathname;
+      const hash = window.location.hash;
+      
       if (path === '/admin-reviews') setAdminView('reviews');
       else if (path === '/admin-orders') setAdminView('orders');
       else if (path === '/success') setAdminView('success');
       else setAdminView('none');
+
+      if (hash) {
+        const element = document.getElementById(hash.substring(1));
+        if (element) {
+          setTimeout(() => {
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            element.classList.add('ring-4', 'ring-blue-600', 'ring-offset-8');
+            setTimeout(() => element.classList.remove('ring-4', 'ring-blue-600', 'ring-offset-8'), 3000);
+          }, 500);
+        }
+      }
     };
+    
+    // Initial anchor check
+    handlePopState();
+    
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
