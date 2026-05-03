@@ -1581,7 +1581,7 @@ export default function App() {
         <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-12">
           <div className="flex flex-col md:flex-row items-center gap-5"><div className="p-4 bg-blue-600 rounded-3xl"><Truck size={28} /></div><div><h4 className="font-black uppercase tracking-tight text-xl leading-none mb-1">FedEx Express</h4><p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">4-5 Day Delivery to USA</p></div></div>
           <div className="flex flex-col md:flex-row items-center gap-5"><div className="p-4 bg-blue-600 rounded-3xl"><Clock size={28} /></div><div><h4 className="font-black uppercase tracking-tight text-xl leading-none mb-1">8-Day Prep</h4><p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Handmade Custom Tailoring</p></div></div>
-          <div className="flex flex-col md:flex-row items-center gap-5"><div className="p-4 bg-blue-600 rounded-3xl"><ShieldCheck size={28} /></div><div><h4 className="font-black uppercase tracking-tight text-xl leading-none mb-1">Secure Payments</h4><p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Safe Checkout via PayPal</p></div></div>
+          <div className="flex flex-col md:flex-row items-center gap-5"><div className="p-4 bg-blue-600 rounded-3xl"><ShieldCheck size={28} /></div><div><h4 className="font-black uppercase tracking-tight text-xl leading-none mb-1">Secure Payments</h4><p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Safe Checkout via Stripe & PayPal</p></div></div>
         </div>
       </div>
       <section id="products" className="py-24 px-4 md:px-6">
