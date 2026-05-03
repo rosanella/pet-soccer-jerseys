@@ -1567,10 +1567,10 @@ export default function App() {
                 muted 
                 loop 
                 playsInline 
-                poster="/images/hero_corgi_usa.jpg"
+                poster="/images/hero_corgi_usa.jpg?v=2"
                 className="w-full h-full object-cover"
               >
-                <source src="/images/Dog_model.mp4" type="video/mp4" />
+                <source src="/images/Dog_model.mp4?v=2" type="video/mp4" />
                 Your browser does not support the video tag.
               </video>
             </div>
