@@ -516,7 +516,7 @@ const ProductCard = ({ product, onOpenSizeChart, onStartCheckout }: { product: a
   };
 
   return (
-    <div className="bg-white rounded-[2.5rem] overflow-hidden shadow-lg border border-gray-100 flex flex-col h-full group transition-shadow hover:shadow-2xl">
+    <div id={product.slug} className="bg-white rounded-[2.5rem] overflow-hidden shadow-lg border border-gray-100 flex flex-col h-full group transition-shadow hover:shadow-2xl scroll-mt-32">
       <div className="relative aspect-[4/5] overflow-hidden" onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)} onClick={() => setIsHovered(!isHovered)}>
         <img src={isHovered ? product.images[1] : product.images[0]} alt={product.name} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" />
         <div className="absolute top-4 left-4 bg-blue-600 text-white px-3 py-1 rounded-full text-[9px] font-black tracking-widest uppercase">2026 World Cup</div>
@@ -1418,22 +1418,25 @@ export default function App() {
       else setAdminView('none');
 
       if (hash) {
-        const element = document.getElementById(hash.substring(1));
-        if (element) {
-          setTimeout(() => {
+        const targetId = hash.substring(1);
+        setTimeout(() => {
+          const element = document.getElementById(targetId);
+          if (element) {
             element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            element.classList.add('ring-4', 'ring-blue-600', 'ring-offset-8');
+            element.classList.add('ring-4', 'ring-blue-600', 'ring-offset-8', 'transition-all');
             setTimeout(() => element.classList.remove('ring-4', 'ring-blue-600', 'ring-offset-8'), 3000);
-          }, 500);
-        }
+          }
+        }, 800); // Slightly longer delay for React render + images
       }
     };
     
-    // Initial anchor check
     handlePopState();
-    
     window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
+    window.addEventListener('hashchange', handlePopState);
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      window.removeEventListener('hashchange', handlePopState);
+    };
   }, []);
 
   const navigateTo = (path: string) => {
